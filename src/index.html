@@ -1,0 +1,195 @@
+<html>
+<head>
+    <title>sidebar-v2 example</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//openlayers.org/en/latest/css/ol.css" type="text/css">
+    <style>
+    /* You can add global styles to this file, and also import other style files */
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    html, body, #map {
+      height: 100%;
+      font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
+    }
+
+    .lorem {
+      font-style: italic;
+      color: #AAA;
+    }
+
+    .ol-layerswitcher {
+      margin: 0 -1.5em;
+      padding: 1em;
+      background: #eee;
+    }
+    .ol-layerswitcher .layerswitcher-opacity {
+      width: 100%!important;
+      margin: 7px 0 2em!important;
+    }
+    .li-content {
+      width: calc(100% - 3em);
+    }
+
+    #search .nominatim input {
+      width: 100%;
+      border: 1px solid #000;
+    }
+    #search .nominatim ul,
+    #search .nominatim li {
+      max-width: 100%;
+    }
+    </style>
+
+</head>
+<body>
+  <div id="sidebar" class="sidebar collapsed">
+    <!-- Nav tabs -->
+    <div class="sidebar-tabs">
+      <ul role="tablist">
+        <br />
+        <li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
+        <li><a href="#profile" role="tab"><i class="fa fa-globe"></i></a></li>
+        <li><a href="#search" role="tab"><i class="fa fa-search"></i></a></li>
+        <li class="disabled"><a href="#messages" role="tab"><i class="fa fa-envelope"></i></a></li>
+        <li><a href="https://github.com/Turbo87/sidebar-v2" role="tab" target="_blank"><i class="fa fa-github"></i></a></li>
+      </ul>
+
+      <ul role="tablist">
+        <li><a href="#settings" role="tab"><i class="fa fa-gear"></i></a></li>
+      </ul>
+    </div>
+
+    <!-- Tab panes -->
+    <div class="sidebar-content">
+      <div class="sidebar-pane" id="home">
+        <h1 class="sidebar-header">
+          sidebar-v2
+          <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+        </h1>
+
+        <p>A responsive sidebar for mapping libraries like <a href="http://leafletjs.com/">Leaflet</a> or <a href="https://openlayers.org/">OpenLayers</a>.</p>
+
+        <p class="lorem">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+      </div>
+
+      <div class="sidebar-pane" id="profile">
+        <h1 class="sidebar-header">
+          sidebar-v2
+          <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+        </h1>
+
+        <h1>ol.control.LayerSwitcher</h1>
+        <div></div>
+        <p>
+        </p>
+      </div>
+
+      <div class="sidebar-pane" id="search">
+        <h1 class="sidebar-header">
+          sidebar-v2
+          <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+        </h1>
+
+        <h1>ol.control.SearchNominatim</h1>
+        <div></div>
+        <p>
+        </p>
+      </div>
+
+      <div class="sidebar-pane" id="messages">
+        <h1 class="sidebar-header">
+          sidebar-v2
+          <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+        </h1>
+
+        <h1 class="sidebar-header">Messages<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+
+      </div>
+
+      <div class="sidebar-pane" id="settings">
+        <h1 class="sidebar-header">Settings<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+        <p>
+          ol.control.LayerSwitcher from ol-ext.
+          <br/>
+        </p>
+        <p>
+          ol.control.Sidebar by Turbo87.
+          <br/>
+
+        </p>
+      </div>
+    </div>
+  </div>
+
+    <div id="map" class="sidebar-map"></div>
+
+    <script src="//openlayers.org/en/latest/build/ol.js" type="text/javascript"></script>
+
+    <link rel="stylesheet" href="//turbo87.github.io/sidebar-v2/css/ol3-sidebar.css" />
+    <script src="//turbo87.github.io/sidebar-v2/js/ol3-sidebar.js" ></script>
+
+     <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
+    <script src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script>
+    <script>
+    var map = new ol.Map({
+    target: 'map',
+    layers: [
+      new ol.layer.Tile(
+        {	title: "Watercolor",
+         baseLayer: true,
+         source: new ol.source.Stamen({
+           layer: 'watercolor'
+         })
+        }),
+      new ol.layer.Tile(
+        {	title: "Toner",
+         baseLayer: true,
+         visible: false,
+         source: new ol.source.Stamen({
+           layer: 'toner'
+         })
+        }),
+      new ol.layer.Tile(
+        {	title: "OSM",
+         baseLayer: true,
+         source: new ol.source.OSM(),
+         visible: false
+        })
+    ],
+    view: new ol.View({
+      center: ol.proj.transform([7, 51.2], 'EPSG:4326', 'EPSG:3857'),
+      zoom: 4
+    })
+    });
+
+    var sidebar = new ol.control.Sidebar({ element: 'sidebar', position: 'left' });
+
+    map.addControl(sidebar);
+
+    // Add a layer switcher outside the map
+    var switcher = new ol.control.LayerSwitcher(
+    {	target: $("#profile > div").get(0)
+    });
+    map.addControl(switcher);
+
+    // Add a layer switcher outside the map
+    var search = new ol.control.SearchNominatim({
+    target: $("#search > div").get(0)
+    });
+    map.addControl(search);
+    search.on('select', function(e) {
+    map.getView().setCenter(e.coordinate)
+    if (map.getView().getZoom()<13) map.getView().setZoom(13);
+    });
+    </script>
+</body>
+</html>
