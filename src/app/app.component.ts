@@ -43,7 +43,6 @@ export class AppComponent implements AfterViewInit, OnInit  {
     });
   }
 
-
   myControl = new FormControl();
   options: string[] = ['turnOnGEOJson', 'turnOffGEOJson', 'Three'];
   filteredOptions: Observable<string[]>;
@@ -71,6 +70,14 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public redoStack;
   public toBeRedrawn;
   public toBeDeleted;
+  public zoomifyLayer;
+  public extent;
+  public invert;
+  public invertString: number;
+  public HueString: number;
+  public SaturationString: number;
+  public invertValue: string;
+
   /** OL-Map. */
   map: Map;
   /** Basic layer. */
@@ -95,6 +102,13 @@ export class AppComponent implements AfterViewInit, OnInit  {
   delVector: VectorSource;
 
   vectorSource: VectorSource;
+
+  zoomifySource: Zoomify;
+
+  imagery: TileLayer;
+
+
+
   /**
    * Initialise the map.
    */
@@ -129,7 +143,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
     this.modifyVector = new VectorLayer({
       source: new VectorSource({
-        url: 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json',
+        url: 'https://raw.githubusercontent.com/Sai-Adarsh/viewer-geojson/main/brain.geo.json',
         format: new GeoJSON(),
         wrapX: false,
       }),
@@ -149,25 +163,93 @@ export class AppComponent implements AfterViewInit, OnInit  {
       freehand: true,
     });
 
+    this.zoomifySource = new Zoomify({
+      url: 'http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=/PMD2057/PMD2057%262056-F9-2015.03.06-17.55.48_PMD2057_1_0025.jp2&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}',
+      size: [24000, 24000],
+      crossOrigin: 'anonymous',
+      zDirection: -1, // Ensure we get a tile with the screen resolution or higher
+    });
+
+    this.extent = this.zoomifySource.getTileGrid().getExtent();
+
+    this.imagery = new TileLayer({
+      source: this.zoomifySource,
+    });
+
     this.switchLayer = [
       this.layerTile, this.vector, this.modifyVector
+    ]
+
+    this.zoomifyLayer = [
+      this.imagery, this.vector
     ]
 
     this.modifyVector.setVisible(false);
     this.redoStack   = [];
 
+    this.invertString = 0;
+    this.HueString = 0
+    this.SaturationString = 100;
+    this.invertValue = "";
+
     this.map = new Map({
       target: 'map',
       interactions: defaultInteractions().extend([this.select, this.modify]),
-      layers: this.switchLayer,
+      layers: this.zoomifyLayer,
       view: new View({
-        center: fromLonLat([0, 0]),
+        resolutions: this.imagery.getSource().getTileGrid().getResolutions(),
         zoom: 2,
+        extent: this.extent,
         constrainResolution: true
       }),
     });
 
+    this.map.getView().fit(this.extent);
+
   }
+
+
+  resetToDefault = () => {
+    const that = this;
+    that.invertString = 0;
+    that.HueString = 0
+    that.SaturationString = 100;
+    this.map.on('postcompose', function(e){
+      console.log("imhere", this.invertValue);
+      document.querySelector('canvas').style.filter="";
+    });
+  }
+
+  onInvertChange = (event) => {
+    const that = this;
+    that.invertString = event.value;
+    console.log(that.invertString);
+    this.map.on('postcompose', function(e){
+      this.invertValue = "invert(" + that.invertString + "%) " + "hue-rotate(" + that.HueString + "deg) " + "saturate(" + that.SaturationString + "%)";
+      console.log("imhere", this.invertValue);
+      document.querySelector('canvas').style.filter=this.invertValue;
+    });
+  };
+
+  onHueChange = (event) => {
+    const that = this;
+    that.HueString = event.value;
+    this.map.on('postcompose',function(e){
+      this.invertValue = "invert(" + that.invertString + "%) " + "hue-rotate(" + that.HueString + "deg) " + "saturate(" + that.SaturationString + "%)";
+      console.log("imhere", this.invertValue);
+      document.querySelector('canvas').style.filter=this.invertValue;
+    });
+  };
+
+  onSaturationChange = (event) => {
+    const that = this;
+    that.SaturationString = event.value;
+    this.map.on('postcompose',function(e){
+      this.invertValue = "invert(" + that.invertString + "%) " + "hue-rotate(" + that.HueString + "deg) " + "saturate(" + that.SaturationString + "%)";
+      console.log("imhere", this.invertValue);
+      document.querySelector('canvas').style.filter=this.invertValue;
+    });
+  };
 
   onToggle(event) {
     if (event.checked == true) {
