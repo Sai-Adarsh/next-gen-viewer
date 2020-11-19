@@ -376,7 +376,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
         color: 'rgba(0,255,255, 0.1)',
       }),
       stroke: new Stroke({
-        color: '	#00FFFF',
+        color: '#00FFFF',
         width: 3,
       })
     });
@@ -388,14 +388,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
             if(features[i].get('name')=="add"){
               var uid = features[i].ol_uid;
               vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
-              isIntersected = turf.intersect(polygon,turfpoly);
-              //console.log(isIntersected," check");
-              if(isIntersected == null){
-                polygon = polygon;
-              }
-              else{
               polygon = turf.union(polygon,turfpoly);
-              }
             }
             else if(count>0 && features[i].get('name')=="erase"){
               var uid = features[i].ol_uid;
