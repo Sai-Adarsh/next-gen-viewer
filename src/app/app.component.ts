@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, OnInit} from '@angular/core';
 import XYZ from 'ol/source/XYZ';
+import * as turf from '@turf/turf'
 import Map from 'ol/Map';
 import View from 'ol/View';
 import LayerTile from 'ol/layer/Tile';
@@ -107,7 +108,15 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
   imagery: TileLayer;
 
+  public styleAdd : Style;
 
+  public styleErase : Style;
+
+  public addPolygon : Draw;
+
+  public erasePolygon : Draw;
+
+ 
 
   /**
    * Initialise the map.
@@ -162,6 +171,59 @@ export class AppComponent implements AfterViewInit, OnInit  {
       type: 'Polygon',
       freehand: true,
     });
+    
+        this.styleAdd = new Style({
+          fill: new Fill({
+            color: 'rgba(0, 255, 0, 0.1)',
+          }),
+          stroke: new Stroke({
+            color: '#28a745',
+            width: 3,
+          }),
+          image: new CircleStyle({
+                radius: 7,
+                fill: new Fill({
+                  color: '#28a745'
+                }),
+                stroke: new Stroke({
+                  color: 'white',
+                  width: 2,
+                }),
+          })
+      });
+    
+    this.styleErase = new Style({
+      fill: new Fill({
+        color: 'rgba(255, 170, 70, 0.1)',
+      }),
+      stroke: new Stroke({
+        color: '#f0ad4e',
+        width: 3,
+      }),
+      image: new CircleStyle({
+            radius: 7,
+            fill: new Fill({
+              color: '#f0ad4e'
+            }),
+            stroke: new Stroke({
+              color: 'white',
+              width: 2,
+            }),
+      })
+    });
+      
+    this.addPolygon = new Draw({
+      source: this.vector.getSource(),
+      type: "Polygon",
+      style:this.styleAdd,
+    });
+
+    this.erasePolygon = new Draw({
+      source: this.vector.getSource(),
+      type: "Polygon",
+      style:this.styleErase,
+    });
+
 
     this.zoomifySource = new Zoomify({
       url: 'http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=/PMD2057/PMD2057%262056-F9-2015.03.06-17.55.48_PMD2057_1_0025.jp2&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}',
@@ -205,9 +267,36 @@ export class AppComponent implements AfterViewInit, OnInit  {
     });
 
     this.map.getView().fit(this.extent);
+    
+    this.addPolygon.setActive(false);
+    this.erasePolygon.setActive(false);
+  
+    this.vector.on("postrender",(event)=>{
+      this.setPolyStyle();
+    });
+
+    this.addPolygon.on("drawstart",(event)=>{
+      this.setPolyStyle();
+    });
+    this.addPolygon.on("drawend",(event)=>{
+      this.setPolyStyle();
+
+    });
 
   }
 
+  setPolyStyle(){
+    var vector_sr = this.vector.getSource();
+    var features = vector_sr.getFeatures();
+    if(features.length>0 &&this.erasePolygon.getActive() == true && features[features.length - 1].getStyle() == null){
+            features[features.length -1].setStyle(this.styleErase);
+            features[features.length -1].set("name","erase");
+    }
+    else if(features.length>0 && this.addPolygon.getActive() == true && features[features.length - 1].getStyle() == null){
+            features[features.length -1].setStyle(this.styleAdd);
+            features[features.length -1].set("name","add");
+    }
+  }
 
   resetToDefault = () => {
     const that = this;
@@ -260,8 +349,80 @@ export class AppComponent implements AfterViewInit, OnInit  {
     }
   }
 
+  addPolygons(){
+    this.draw.setActive(false);
+    this.erasePolygon.setActive(false);
+    this.addPolygon.setActive(true);
+    this.map.addInteraction(this.addPolygon);
+    
+  }
+
+  erasePolygons(){
+    this.draw.setActive(false);
+    this.addPolygon.setActive(false);
+    this.erasePolygon.setActive(true);
+    this.map.addInteraction(this.erasePolygon);  
+  }
+
+  combine(){
+    var vector_sr = this.vector.getSource();
+    var features = vector_sr.getFeatures();
+    var format = new GeoJSON();
+    var turfpoly;
+    var polygon;
+    var count = 0;
+    var sty = new Style({
+      fill: new Fill({
+        color: 'rgba(0,255,255, 0.1)',
+      }),
+      stroke: new Stroke({
+        color: '	#00FFFF',
+        width: 3,
+      })
+    });
+    var isIntersected = turf.polygon([]);
+    for(var i = 0;i<features.length;i++){
+      
+        turfpoly = format.writeFeatureObject(features[i]);
+        if(count>0){
+            if(features[i].get('name')=="add"){
+              var uid = features[i].ol_uid;
+              vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+              isIntersected = turf.intersect(polygon,turfpoly);
+              //console.log(isIntersected," check");
+              if(isIntersected == null){
+                polygon = polygon;
+              }
+              else{
+              polygon = turf.union(polygon,turfpoly);
+              }
+            }
+            else if(count>0 && features[i].get('name')=="erase"){
+              var uid = features[i].ol_uid;
+              vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+              polygon = turf.difference(polygon,turfpoly);
+            }
+        }
+        else{ 
+          var uid = features[i].ol_uid;
+          vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+          polygon = format.writeFeatureObject(features[i]);
+          count = count+1;
+        }
+    }
+    if(count>0){  
+        polygon = format.readFeatures(polygon)[0]
+        polygon.setStyle(sty);
+        vector_sr.addFeature(polygon);
+    }
+    console.log(vector_sr.getFeatures());
+    this.vector.setSource(vector_sr);
+  }
+
   addInteraction(interactionType) {
     this.draw.setActive(true);
+    this.addPolygon.setActive(false);
+    this.erasePolygon.setActive(false);
     this.draw = new Draw({
       source: this.vector.getSource(),
       type: interactionType,
@@ -270,8 +431,11 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.map.addInteraction(this.draw);
   }
 
+  
   removeInteraction(){
     this.draw.setActive(false);
+    this.addPolygon.setActive(false);
+    this.erasePolygon.setActive(false);
     this.map.removeInteraction(this.draw);
   }
 

@@ -60,7 +60,26 @@
         </button>
       </mat-expansion-panel>
     </mat-accordion><p> </p>
-
+    <mat-accordion>
+      <mat-expansion-panel (opened)="panelOpenState = true"
+                           (closed)="panelOpenState = false">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Union Difference
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <button (click)="this.addPolygons()" mat-raised-button>
+          Add Polygon
+        </button><p> </p>
+        <button (click)="this.erasePolygons()" mat-raised-button>
+          Erase Polygon
+        </button><p> </p>
+        <button (click)="this.combine()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+              <mat-icon>track_changes</mat-icon>
+              Combine
+        </button>
+      </mat-expansion-panel>
+    </mat-accordion><p> </p>
 
     <mat-accordion>
       <mat-expansion-panel (opened)="panelOpenState = true"

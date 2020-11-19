@@ -21,6 +21,8 @@
     "@angular/platform-browser": "~10.0.0",
     "@angular/platform-browser-dynamic": "~10.0.0",
     "@angular/router": "~10.0.0",
+    "@turf/along": "^6.0.1",
+    "@turf/turf": "^5.1.6",
     "ol": "^6.4.3",
     "rxjs": "~6.5.5",
     "tslib": "^2.0.0",
