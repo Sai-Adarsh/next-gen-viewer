@@ -152,11 +152,16 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
     this.modifyVector = new VectorLayer({
       source: new VectorSource({
-        url: 'https://raw.githubusercontent.com/Sai-Adarsh/viewer-geojson/main/brain.geo.json',
+        url: 'http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2057/0025/',
         format: new GeoJSON(),
         wrapX: false,
+        crossOrigin: 'anonymous',
+        zDirection: -1, // Ensure we get a tile with the screen resolution or higher
+        size: [24000, 24000],
       }),
     });
+
+    this.modifyVector.getStyle().apply();
 
     this.select = new Select({
       wrapX: false,
@@ -243,7 +248,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     ]
 
     this.zoomifyLayer = [
-      this.imagery, this.vector
+      this.imagery, this.vector, this.modifyVector
     ]
 
     this.modifyVector.setVisible(false);
@@ -254,9 +259,11 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.SaturationString = 100;
     this.invertValue = "";
 
+
+
     this.map = new Map({
       target: 'map',
-      interactions: defaultInteractions().extend([this.select, this.modify]),
+      interactions: defaultInteractions().extend([this.select, this.modify,]),
       layers: this.zoomifyLayer,
       view: new View({
         resolutions: this.imagery.getSource().getTileGrid().getResolutions(),
@@ -267,7 +274,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     });
 
     this.map.getView().fit(this.extent);
-    
+
     this.addPolygon.setActive(false);
     this.erasePolygon.setActive(false);
   
@@ -342,6 +349,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
   onToggle(event) {
     if (event.checked == true) {
+      console.log("imhere");
       this.modifyVector.setVisible(true);
     }
     else {
@@ -365,51 +373,56 @@ export class AppComponent implements AfterViewInit, OnInit  {
   }
 
   combine(){
-    var vector_sr = this.vector.getSource();
-    var features = vector_sr.getFeatures();
-    var format = new GeoJSON();
-    var turfpoly;
-    var polygon;
-    var count = 0;
-    var sty = new Style({
-      fill: new Fill({
-        color: 'rgba(0,255,255, 0.1)',
-      }),
-      stroke: new Stroke({
-        color: '#00FFFF',
-        width: 3,
-      })
-    });
-    var isIntersected = turf.polygon([]);
-    for(var i = 0;i<features.length;i++){
-      
-        turfpoly = format.writeFeatureObject(features[i]);
-        if(count>0){
-            if(features[i].get('name')=="add"){
-              var uid = features[i].ol_uid;
-              vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
-              polygon = turf.union(polygon,turfpoly);
-            }
-            else if(count>0 && features[i].get('name')=="erase"){
-              var uid = features[i].ol_uid;
-              vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
-              polygon = turf.difference(polygon,turfpoly);
-            }
-        }
-        else{ 
-          var uid = features[i].ol_uid;
-          vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
-          polygon = format.writeFeatureObject(features[i]);
-          count = count+1;
-        }
+    try {
+      var vector_sr = this.vector.getSource();
+      var features = vector_sr.getFeatures();
+      var format = new GeoJSON();
+      var turfpoly;
+      var polygon;
+      var count = 0;
+      var sty = new Style({
+        fill: new Fill({
+          color: 'rgba(0,255,255, 0.1)',
+        }),
+        stroke: new Stroke({
+          color: '#00FFFF',
+          width: 3,
+        })
+      });
+      var isIntersected = turf.polygon([]);
+      for(var i = 0;i<features.length;i++){
+        
+          turfpoly = format.writeFeatureObject(features[i]);
+          if(count>0){
+              if(features[i].get('name')=="add"){
+                var uid = features[i].ol_uid;
+                vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+                polygon = turf.union(polygon,turfpoly);
+              }
+              else if(count>0 && features[i].get('name')=="erase"){
+                var uid = features[i].ol_uid;
+                vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+                polygon = turf.difference(polygon,turfpoly);
+              }
+          }
+          else{ 
+            var uid = features[i].ol_uid;
+            vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+            polygon = format.writeFeatureObject(features[i]);
+            count = count+1;
+          }
+      }
+      if(count>0){  
+          polygon = format.readFeatures(polygon)[0]
+          polygon.setStyle(sty);
+          vector_sr.addFeature(polygon);
+      }
+      console.log(vector_sr.getFeatures());
+      this.vector.setSource(vector_sr);
+    } catch (error) {
+      console.log("Select region inside added polygon");
     }
-    if(count>0){  
-        polygon = format.readFeatures(polygon)[0]
-        polygon.setStyle(sty);
-        vector_sr.addFeature(polygon);
-    }
-    console.log(vector_sr.getFeatures());
-    this.vector.setSource(vector_sr);
+    
   }
 
   addInteraction(interactionType) {
@@ -433,16 +446,26 @@ export class AppComponent implements AfterViewInit, OnInit  {
   }
 
   deleteDrawing() {
-    this.toBeDeleted = this.vector.getSource().getFeatures()[this.vector.getSource().getFeatures().length - 1];
-    this.vector.getSource().removeFeature(this.toBeDeleted);
-    this.redoStack.push(this.toBeDeleted);
+    try {
+      this.toBeDeleted = this.vector.getSource().getFeatures()[this.vector.getSource().getFeatures().length - 1];
+      this.vector.getSource().removeFeature(this.toBeDeleted);
+      this.redoStack.push(this.toBeDeleted);
     console.log(this.redoStack);
+    } catch (error) {
+      console.log("No more undos");
+    }
+    
   }
 
   redoDrawing() {
-    this.toBeRedrawn = this.redoStack[this.redoStack.length - 1]
-    this.vector.getSource().addFeature(this.toBeRedrawn);
-    this.redoStack.pop();
+    try {
+      this.toBeRedrawn = this.redoStack[this.redoStack.length - 1]
+      this.vector.getSource().addFeature(this.toBeRedrawn);
+      this.redoStack.pop();
+    } catch (error) {
+      console.log("No more redos");
+    }
+    
   }
 
   REPL() {
