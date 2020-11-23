@@ -10,12 +10,12 @@ import ScaleLine from 'ol/control/ScaleLine';
 import Attribution from 'ol/control/Attribution';
 import SourceOsm from 'ol/source/OSM';
 import SourceStamen from 'ol/source/Stamen';
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, transform } from 'ol/proj';
 import { defaults as defaultControls } from 'ol/control';
 import { defaults as defaultInteractions, PinchZoom, Modify, Select } from 'ol/interaction';
 import { Injectable } from '@angular/core';
 import 'ol/ol.css';
-import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
+import {Circle as CircleStyle, Fill, Stroke, Style, Text} from 'ol/style';
 import Draw from 'ol/interaction/Draw';
 import {OSM, Vector as VectorSource} from 'ol/source';
 import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
@@ -28,6 +28,10 @@ import {Observable} from 'rxjs';
 import {map, startWith} from 'rxjs/operators';
 import Zoomify from 'ol/source/Zoomify';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import firebase from "firebase";
+import Feature from 'ol/Feature';
+import Polygon from 'ol/geom/Polygon';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -36,8 +40,11 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 })
 export class AppComponent implements AfterViewInit, OnInit  {
 
-  constructor(private _snackBar: MatSnackBar) {}
+  constructor(private _snackBar: MatSnackBar, private httpClient: HttpClient) {}
 
+  public urlData;
+  public secNo;
+  
   openSnackBar(message: string, action: string) {
     this._snackBar.open(message, action, {
       duration: 2000,
@@ -45,7 +52,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
   }
 
   myControl = new FormControl();
-  options: string[] = ['turnOnGEOJson', 'turnOffGEOJson', 'Three'];
+  options: string[] = ['turnOnGEOJson', 'turnOffGEOJson', 'savePolygons', 'retrievePolygons', 'loadPolygons'];
   filteredOptions: Observable<string[]>;
 
   ngOnInit() {
@@ -78,7 +85,13 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public HueString: number;
   public SaturationString: number;
   public invertValue: string;
-
+  public firebaseConfig;
+  public loadedVector;
+  public defaultURL;
+  public loadedFeature; //load, save
+  public loadedCoords; //load, save
+  public defaultGeoJSONSecNo;
+  public lastChecked;
   /** OL-Map. */
   map: Map;
   /** Basic layer. */
@@ -123,12 +136,29 @@ export class AppComponent implements AfterViewInit, OnInit  {
    */
 
   ngAfterViewInit() {
+    this.firebaseConfig = {
+      apiKey: "AIzaSyA_rPzl1D8YouEsSJ1AjQwElFqH_mxOAFI",
+      authDomain: "realtime-4a7de.firebaseapp.com",
+      databaseURL: "https://realtime-4a7de.firebaseio.com",
+      projectId: "realtime-4a7de",
+      storageBucket: "realtime-4a7de.appspot.com",
+      messagingSenderId: "624733681109",
+      appId: "1:624733681109:web:ab5c7b2277fbf1ffd6b95c",
+      measurementId: "G-W109P6TCZL"
+    };
 
+    
+    if (!firebase.apps.length) {
+        firebase.initializeApp(this.firebaseConfig);
+    }
+
+    this.defaultGeoJSONSecNo = 60;
+    this.secNo = 60;
     this.sources = {
       osm: new SourceOsm(),
       stamen: new SourceStamen({ layer: 'toner' }),
       vector: new VectorSource({
-        url: 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json',
+        url: 'http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2057/0025/',
         format: new GeoJSON(),
         wrapX: false,
       })
@@ -155,9 +185,6 @@ export class AppComponent implements AfterViewInit, OnInit  {
         url: 'http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2057/0025/',
         format: new GeoJSON(),
         wrapX: false,
-        crossOrigin: 'anonymous',
-        zDirection: -1, // Ensure we get a tile with the screen resolution or higher
-        size: [24000, 24000],
       }),
     });
 
@@ -230,8 +257,14 @@ export class AppComponent implements AfterViewInit, OnInit  {
     });
 
 
+    this.defaultURL = 'http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=/PMD2057/PMD2057%262056-F20-2015.03.06-21.13.19_PMD2057_3_0060.jp2&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}';
+
+    this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4240/').subscribe(res=>{
+      this.urlData = res;
+    });  
+
     this.zoomifySource = new Zoomify({
-      url: 'http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=/PMD2057/PMD2057%262056-F9-2015.03.06-17.55.48_PMD2057_1_0025.jp2&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}',
+      url: this.defaultURL,
       size: [24000, 24000],
       crossOrigin: 'anonymous',
       zDirection: -1, // Ensure we get a tile with the screen resolution or higher
@@ -258,8 +291,6 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.HueString = 0
     this.SaturationString = 100;
     this.invertValue = "";
-
-
 
     this.map = new Map({
       target: 'map',
@@ -316,6 +347,46 @@ export class AppComponent implements AfterViewInit, OnInit  {
     });
   }
 
+  savePolygonsToFirebase = () => {
+    //const coordinates = this.map.getLayers().item(1).getSource().getFeatures()[0].values_.geometry.flatCoordinates;
+    //const type = this.map.getLayers().item(1).getSource().getFeatures()[0].getGeometry().getType();
+    var writer = new GeoJSON();
+    var geojsonStr = writer.writeFeatures(this.vector.getSource().getFeatures());
+    /*const data = {
+      'string': "geojsonStr",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": coordinates,
+      },
+    };*/
+    console.log("save works", geojsonStr);
+    const db = firebase.database().ref().child("vector").push(geojsonStr);
+  }
+
+  retrievePolygonsFromFirebase = () => {
+    console.log("works here");
+    firebase.database().ref('vector').once('value', snapshot => {
+      var items = [];
+      snapshot.forEach((child) => {
+        items.push(child.val());
+      });
+      this.loadedFeature = items[items.length - 1];
+    });
+  }
+
+  loadPolygonsFromFirebase = () => {
+    console.log(this.loadedFeature);
+    var reader = new GeoJSON();
+    const newGeoJson = reader.readFeatures(this.loadedFeature);
+    console.log("works here", newGeoJson);
+    var i;
+    for (i = 0; i < newGeoJson.length; i++) {
+      this.vector.getSource().addFeature(newGeoJson[i]);
+    }
+    //this.vector.getSource().addFeature(newGeoJson[0]);
+  }
+
+
   onInvertChange = (event) => {
     const that = this;
     that.invertString = event.value;
@@ -348,11 +419,43 @@ export class AppComponent implements AfterViewInit, OnInit  {
   };
 
   onToggle(event) {
+    this.modifyVector.getSource().clear();
     if (event.checked == true) {
-      console.log("imhere");
+      this.lastChecked = true;
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2057/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
+        var atlasstyle = new Style({
+          fill: new Fill({
+              color: 'rgba(255, 255, 255, 0)'
+          }),
+          stroke: new Stroke({
+              color: '#0c0c0c', //'#2F7B63',
+              width: 2
+            }),
+              text: new Text({
+                  font: '12px Calibri,sans-serif',
+                  fill: new Fill({
+                      color: '#000'
+                  }),
+                  stroke: new Stroke({
+                      color: '#fff',
+                      width: 3
+                  })
+              })
+        });
+        console.log(this.defaultGeoJSONSecNo);
+        res = JSON.stringify(res);
+        var reader = new GeoJSON();
+        const newGeoJson = reader.readFeatures(res);
+        var i;
+        for (i = 0; i < newGeoJson.length; i++) {
+          newGeoJson[i].setStyle(atlasstyle);
+          this.modifyVector.getSource().addFeature(newGeoJson[i]);
+        }
+      });
       this.modifyVector.setVisible(true);
     }
     else {
+      this.lastChecked = false;
       this.modifyVector.setVisible(false);
     }
   }
@@ -417,7 +520,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
           polygon.setStyle(sty);
           vector_sr.addFeature(polygon);
       }
-      console.log(vector_sr.getFeatures());
+      console.log(vector_sr);
       this.vector.setSource(vector_sr);
     } catch (error) {
       console.log("Select region inside added polygon");
@@ -468,13 +571,124 @@ export class AppComponent implements AfterViewInit, OnInit  {
     
   }
 
+  emailUpdated(event) {
+    this.secNo = parseInt(event.target.value);
+    this.defaultGeoJSONSecNo = parseInt(event.target.value);
+    
+    console.log("section", this.secNo);
+  }
+
+  brainIDUpdated() {
+    this.modifyVector.setVisible(false);
+    this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4240/').subscribe(res=>{
+      this.urlData = res;
+      console.log(res);
+      var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.F[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
+      this.zoomifySource = new Zoomify({
+        url: newURL,
+        size: [24000, 24000],
+        crossOrigin: 'anonymous',
+        zDirection: -1, // Ensure we get a tile with the screen resolution or higher
+      });
+      this.defaultURL = newURL;
+      this.imagery.setSource(this.zoomifySource);
+      console.log(this.defaultURL);
+    });
+    console.log(this.lastChecked, this.defaultGeoJSONSecNo);
+    if (this.lastChecked == true) {
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2057/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
+        var atlasstyle = new Style({
+          fill: new Fill({
+              color: 'rgba(255, 255, 255, 0)'
+          }),
+          stroke: new Stroke({
+              color: '#0c0c0c', //'#2F7B63',
+              width: 2
+            }),
+              text: new Text({
+                  font: '12px Calibri,sans-serif',
+                  fill: new Fill({
+                      color: '#000'
+                  }),
+                  stroke: new Stroke({
+                      color: '#fff',
+                      width: 3
+                  })
+              })
+        });
+        console.log(this.defaultGeoJSONSecNo);
+        res = JSON.stringify(res);
+        var reader = new GeoJSON();
+        const newGeoJson = reader.readFeatures(res);
+        this.modifyVector.getSource().clear();
+        var i;
+        for (i = 0; i < newGeoJson.length; i++) {
+          newGeoJson[i].setStyle(atlasstyle);
+          this.modifyVector.getSource().addFeature(newGeoJson[i]);
+        }
+      });
+      this.modifyVector.setVisible(true);
+    }
+  }
+
+
+  onToggleTracer(event) {
+    if (event.checked == true) {
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4240/').subscribe(res=>{
+        this.urlData = res;
+        console.log(res);
+        var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.N[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
+        this.zoomifySource = new Zoomify({
+          url: newURL,
+          size: [24000, 24000],
+          crossOrigin: 'anonymous',
+          zDirection: -1, // Ensure we get a tile with the screen resolution or higher
+        });
+        this.defaultURL = newURL;
+        this.imagery.setSource(this.zoomifySource);
+        console.log(this.defaultURL);
+      });
+      console.log(this.defaultURL, this.urlData);
+    }
+    else {
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4240/').subscribe(res=>{
+        this.urlData = res;
+        console.log(res);
+        var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.F[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
+        this.zoomifySource = new Zoomify({
+          url: newURL,
+          size: [24000, 24000],
+          crossOrigin: 'anonymous',
+          zDirection: -1, // Ensure we get a tile with the screen resolution or higher
+        });
+        this.defaultURL = newURL;
+        this.imagery.setSource(this.zoomifySource);
+        console.log(this.defaultURL);
+      });
+    }
+  }
+
   REPL() {
     if (this.myControl.value == "turnOnGEOJson") {
-      this.modifyVector.setVisible(true);
+      const event = {
+        checked: true,
+      };
+      this.lastChecked = true;
+      this.onToggle(event);
     };
     if (this.myControl.value == "turnOffGEOJson") {
+      this.lastChecked = false;
       this.modifyVector.setVisible(false);
     };
+    if (this.myControl.value == "savePolygons") {
+      this.savePolygonsToFirebase();
+    };
+    if (this.myControl.value == "retrievePolygons") {
+      this.retrievePolygonsFromFirebase();
+    };
+    if (this.myControl.value == "loadPolygons") {
+      this.loadPolygonsFromFirebase();
+    }  
   }
 
 }
