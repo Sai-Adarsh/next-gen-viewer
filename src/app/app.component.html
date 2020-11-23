@@ -178,7 +178,26 @@
       </mat-expansion-panel>
     </mat-accordion><p> </p>
 
-    
+    <mat-accordion>
+      <mat-expansion-panel (opened)="panelOpenState = true"
+                           (closed)="panelOpenState = false">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Tree
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); overflow-y : scroll; margin-left: 10px;">
+          <div class="active-pink-3 active-pink-4 mb-4">
+              <mat-form-field appearance="standard">
+                <mat-label>Region Name</mat-label>
+                <input class="form-control search-input" (change)="this.Tree($event);" matInput placeholder="E.g. Hypothalamus">
+              </mat-form-field>
+             <!--<input class="form-control search-input" type="text" placeholder="SearchBar" aria-label="SearchBar">-->
+           </div>
+          <div style="width: 30em; overflow-x: auto; white-space: nowrap;" id='atlas_info'></div>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion><p> </p>
 
   </mat-drawer>
 

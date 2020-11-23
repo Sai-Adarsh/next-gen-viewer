@@ -32,6 +32,9 @@ import firebase from "firebase";
 import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { ReplserviceService } from './replservice.service';
+
+declare var $: any;
 
 @Component({
   selector: 'app-root',
@@ -40,7 +43,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 })
 export class AppComponent implements AfterViewInit, OnInit  {
 
-  constructor(private _snackBar: MatSnackBar, private httpClient: HttpClient) {}
+  constructor(private _snackBar: MatSnackBar, private httpClient: HttpClient, private replserviceService: ReplserviceService) {}
 
   public urlData;
   public secNo;
@@ -61,6 +64,62 @@ export class AppComponent implements AfterViewInit, OnInit  {
         startWith(''),
         map(value => this._filter(value))
       );
+
+      $(function () {
+        // 6 create an instance when the DOM is ready
+        function nodeExpand(node){
+          if (node.children.length === 0)
+            return {text:node.name,...node};
+          else 
+            for(var i=0;i<node.children.length;i++){
+              node.children[i] = nodeExpand(node.children[i]);
+            }
+            return {text:node.name,...node};
+        }
+        $(".search-input").keyup(function () {
+          var searchString = $(this).val();
+          $('#atlas_info').jstree('search', searchString);
+        });
+      
+        $.getJSON('https://raw.githubusercontent.com/Sai-Adarsh/viewer-geojson/main/h.json',function(jsonresponse) {
+          var dataNode=nodeExpand(jsonresponse.msg[0]);
+          $('#atlas_info')
+          .on("changed.jstree", function (e, data) {
+            if(data.selected.length) {
+              //alert('The selected node is: ' + data.instance.get_node(data.selected[0]).text);
+              //console.log(data.selected);
+  
+              console.log('The selected node is: ' + data.selected[0]);//data.instance.get_node(data.selected[0]).text);
+              // if(data.selected.length == 1)
+              //   drawAtlasRegion(data.selected);
+              // else{
+              //   failMessage('<h5>Please select only one</h5>');
+              //   return;
+              // }
+            }
+          })
+          .jstree({ 
+            "plugins" : [ "wholerow", "search"],
+            'core' : {
+              'themes': {
+                'name': 'proton',
+                'responsive': true
+              },
+              'multiple': false,
+              // 'check_callback': true,
+              'data' :function(node,cb){
+                    if(node.id === '#'){
+                      cb({...dataNode},dataNode.children);
+                      }
+                  }
+            },
+            "search": {
+              "case_insensitive": true,
+              "show_only_matches" : true
+            }});
+        })
+      });
+
   }
 
   private _filter(value: string): string[] {
@@ -92,6 +151,9 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public loadedCoords; //load, save
   public defaultGeoJSONSecNo;
   public lastChecked;
+  public treeString;
+
+
   /** OL-Map. */
   map: Map;
   /** Basic layer. */
@@ -388,6 +450,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
 
   onInvertChange = (event) => {
+
     const that = this;
     that.invertString = event.value;
     console.log(that.invertString);
@@ -668,6 +731,8 @@ export class AppComponent implements AfterViewInit, OnInit  {
     }
   }
 
+
+
   REPL() {
     if (this.myControl.value == "turnOnGEOJson") {
       const event = {
@@ -689,6 +754,19 @@ export class AppComponent implements AfterViewInit, OnInit  {
     if (this.myControl.value == "loadPolygons") {
       this.loadPolygonsFromFirebase();
     }  
+  }
+
+  Tree(event) {
+    this.httpClient.get('https://raw.githubusercontent.com/Sai-Adarsh/viewer-geojson/main/h.json').subscribe(res=>{
+        console.log("here", res);
+        this.treeString = [];
+        this.treeString.push(res);
+    });
+  
+  }
+
+  PrintTree() {
+    console.log("Print Tree", typeof this.treeString[0]["msg"], this.treeString[0]["msg"]);
   }
 
 }

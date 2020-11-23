@@ -41,10 +41,16 @@ mat-slider {
   height: 100%;
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
+  overflow: auto;
+  overscroll-behavior-y: contain;
 }
 
 .example-sidenav {
   padding: 20px;
+  overflow-y: auto;
+  overflow: auto;
+  overscroll-behavior-y: contain;
 }
 
 .example-card {

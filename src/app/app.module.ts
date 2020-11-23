@@ -18,6 +18,9 @@ import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatSliderModule} from '@angular/material/slider';
 import { HttpClientModule } from '@angular/common/http';
+import { ReplserviceService } from './replservice.service';
+import { MatTreeModule } from '@angular/material/tree';
+
 @NgModule({
   declarations: [
     AppComponent
@@ -40,9 +43,10 @@ import { HttpClientModule } from '@angular/common/http';
     MatSnackBarModule,
     MatFormFieldModule,
     MatSliderModule,
-    HttpClientModule
+    HttpClientModule,
+    MatTreeModule,
   ],
-  providers: [],
+  providers: [AppComponent],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

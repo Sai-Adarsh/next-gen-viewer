@@ -25,9 +25,13 @@
             ],
             "styles": [
               "./node_modules/@angular/material/prebuilt-themes/pink-bluegrey.css",
+              "node_modules/jstree/dist/themes/default/style.min.css",
               "src/styles.css"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/jquery/dist/jquery.min.js",
+              "node_modules/jstree/dist/jstree.min.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -90,6 +94,7 @@
             ],
             "styles": [
               "./node_modules/@angular/material/prebuilt-themes/pink-bluegrey.css",
+              "node_modules/jstree/dist/themes/default/style.min.css",
               "src/styles.css"
             ],
             "scripts": []
