@@ -33,7 +33,7 @@ import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ReplserviceService } from './replservice.service';
-
+import * as polygonClipping from 'polygon-clipping';
 declare var $: any;
 
 @Component({
@@ -44,9 +44,6 @@ declare var $: any;
 export class AppComponent implements AfterViewInit, OnInit  {
 
   constructor(private _snackBar: MatSnackBar, private httpClient: HttpClient, private replserviceService: ReplserviceService) {}
-
-  public urlData;
-  public secNo;
   
   openSnackBar(message: string, action: string) {
     this._snackBar.open(message, action, {
@@ -152,7 +149,8 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public defaultGeoJSONSecNo;
   public lastChecked;
   public treeString;
-
+  public urlData;
+  public secNo;
 
   /** OL-Map. */
   map: Map;
@@ -160,35 +158,20 @@ export class AppComponent implements AfterViewInit, OnInit  {
   layerTile: LayerTile;
   /** Sources for basic layer. */
   sources: { readonly osm: SourceOsm; readonly stamen: SourceStamen; readonly vector: VectorSource;};
-
   mousePositionControl: MousePosition;
-
   vector: VectorLayer;
-
   vectorLayerTile: LayerTile;
-
   modifyVector: VectorLayer;
-
   select: Select;
-
   modify: Modify;
-
   public  draw: Draw;
-
   delVector: VectorSource;
-
   vectorSource: VectorSource;
-
   zoomifySource: Zoomify;
-
   imagery: TileLayer;
-
   public styleAdd : Style;
-
   public styleErase : Style;
-
   public addPolygon : Draw;
-
   public erasePolygon : Draw;
 
  
@@ -319,9 +302,9 @@ export class AppComponent implements AfterViewInit, OnInit  {
     });
 
 
-    this.defaultURL = 'http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=/PMD2057/PMD2057%262056-F20-2015.03.06-21.13.19_PMD2057_3_0060.jp2&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}';
+    this.defaultURL = 'http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=/PMD2495/PMD2495%262494-F20-2016.02.26-23.11.41_PMD2495_3_0060.jp2&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}';
 
-    this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4240/').subscribe(res=>{
+    this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4958/').subscribe(res=>{
       this.urlData = res;
     });  
 
@@ -485,7 +468,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.modifyVector.getSource().clear();
     if (event.checked == true) {
       this.lastChecked = true;
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2057/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2495/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
         var atlasstyle = new Style({
           fill: new Fill({
               color: 'rgba(255, 255, 255, 0)'
@@ -539,56 +522,72 @@ export class AppComponent implements AfterViewInit, OnInit  {
   }
 
   combine(){
-    try {
-      var vector_sr = this.vector.getSource();
-      var features = vector_sr.getFeatures();
-      var format = new GeoJSON();
-      var turfpoly;
-      var polygon;
-      var count = 0;
-      var sty = new Style({
-        fill: new Fill({
-          color: 'rgba(0,255,255, 0.1)',
-        }),
-        stroke: new Stroke({
-          color: '#00FFFF',
-          width: 3,
-        })
-      });
-      var isIntersected = turf.polygon([]);
-      for(var i = 0;i<features.length;i++){
-        
-          turfpoly = format.writeFeatureObject(features[i]);
-          if(count>0){
-              if(features[i].get('name')=="add"){
-                var uid = features[i].ol_uid;
-                vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
-                polygon = turf.union(polygon,turfpoly);
-              }
-              else if(count>0 && features[i].get('name')=="erase"){
-                var uid = features[i].ol_uid;
-                vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
-                polygon = turf.difference(polygon,turfpoly);
-              }
-          }
-          else{ 
-            var uid = features[i].ol_uid;
-            vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
-            polygon = format.writeFeatureObject(features[i]);
-            count = count+1;
-          }
-      }
-      if(count>0){  
-          polygon = format.readFeatures(polygon)[0]
-          polygon.setStyle(sty);
-          vector_sr.addFeature(polygon);
-      }
-      console.log(vector_sr);
-      this.vector.setSource(vector_sr);
-    } catch (error) {
-      console.log("Select region inside added polygon");
-    }
+    var vector_sr = this.vector.getSource();
+    var features = vector_sr.getFeatures();
+    var format = new GeoJSON();
+    var turfpoly;
+    var polygon;
+    var count = 0;
+    var sty = new Style({
+      fill: new Fill({
+        color: 'rgba(0,255,255, 0.1)',
+      }),
+      stroke: new Stroke({
+        color: '	#00FFFF',
+        width: 3,
+      })
+    });
+
+    var last = turf.polygon([]);
     
+    for(var i = 0;i<features.length;i++){
+      
+        turfpoly = format.writeFeatureObject(features[i]);
+        if(count>0){
+            if(features[i].get('name')=="add"){
+              var uid = features[i].ol_uid;
+              vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+              //console.log(isIntersected," check");
+              polygon = turf.union(polygon,turfpoly);
+            }
+            else if(count>0 && features[i].get('name')=="erase"){
+              var uid = features[i].ol_uid;
+              vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+              last = polygon;
+              polygon = turf.difference(polygon,turfpoly);
+              if(polygon==null){
+                //console.log(turf.getCoords(polygon)[0],"points");
+                //var points = turf.points(turf.getCoords(polygon)[0]);
+                //var len = points.features.length;
+                //if(false && turf.pointsWithinPolygon(points,turfpoly).features.length==len){
+                //  polygon = turf.difference(polygon,turfpoly);
+                //}
+                //else{
+                  //polygon = turf.difference(turf.toWgs84(polygon),turf.toWgs84(turfpoly));//
+                  var poly1 = turf.getCoords(last);
+                  var poly2 = turf.getCoords(turfpoly);
+                  var polyDiff;
+                  polyDiff = polygonClipping.difference(poly1,poly2);
+                  polyDiff = turf.multiPolygon(polyDiff);
+                  polygon = polyDiff;
+                //} 
+              }
+            }
+        }
+        else{ 
+          var uid = features[i].ol_uid;
+          vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+          polygon = format.writeFeatureObject(features[i]);
+          count = count+1;
+        }
+    }
+    if(count>0 && polygon!=null){  
+        polygon = format.readFeatures(polygon)[0]
+        polygon.setStyle(sty);
+        vector_sr.addFeature(polygon);
+    }
+    //console.log(vector_sr.getFeatures());
+    this.vector.setSource(vector_sr); 
   }
 
   addInteraction(interactionType) {
@@ -643,7 +642,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
   brainIDUpdated() {
     this.modifyVector.setVisible(false);
-    this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4240/').subscribe(res=>{
+    this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4958/').subscribe(res=>{
       this.urlData = res;
       console.log(res);
       var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.F[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
@@ -659,7 +658,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     });
     console.log(this.lastChecked, this.defaultGeoJSONSecNo);
     if (this.lastChecked == true) {
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2057/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2495/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
         var atlasstyle = new Style({
           fill: new Fill({
               color: 'rgba(255, 255, 255, 0)'
@@ -697,7 +696,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
   onToggleTracer(event) {
     if (event.checked == true) {
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4240/').subscribe(res=>{
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4958/').subscribe(res=>{
         this.urlData = res;
         console.log(res);
         var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.N[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
@@ -714,7 +713,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
       console.log(this.defaultURL, this.urlData);
     }
     else {
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4240/').subscribe(res=>{
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4958/').subscribe(res=>{
         this.urlData = res;
         console.log(res);
         var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.F[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";

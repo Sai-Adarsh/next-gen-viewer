@@ -1,239 +1,246 @@
-<mat-toolbar>
-   <button mat-icon-button class="example-icon" (click)="drawer.toggle()" aria-label="Example icon-button with menu icon">
-    <mat-icon>menu</mat-icon>
-  </button>
-  <span>Next Gen Viewer</span>&nbsp;&nbsp;
-  <button (click)="this.deleteDrawing()" mat-raised-button>
-    <mat-icon>undo</mat-icon>
-  </button>&nbsp;
-  <button (click)="this.redoDrawing()" mat-raised-button>
-    <mat-icon>redo</mat-icon>
-  </button>&nbsp;
-  <button color="accent" (click)="showFillerREPL = !showFillerREPL" mat-raised-button>
-    Toggle REPL
-  </button>&nbsp;
-  <span class="example-spacer"></span>
-  <p>  </p>
-  <button mat-icon-button class="example-icon" aria-label="Example icon-button with share icon">
-   <mat-icon>share</mat-icon>
-  </button>
-  
-</mat-toolbar>
+<div>
+	<mat-sidenav-container class="example-container">
+		<mat-sidenav #sidenav1 mode="side" position="end" role="navigation" class="example-sidenav">
+        <br /><br />
+        <mat-card-header>
+          <mat-card-title>Development Tools</mat-card-title>
+        </mat-card-header><p> </p>
+        <mat-accordion>
+          <mat-expansion-panel (opened)="panelOpenState = true"
+                              (closed)="panelOpenState = false">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Annotation Tools
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <p> </p>
+            <button (click)="this.addInteraction('Point')" mat-raised-button>
+              Point
+            </button><p> </p>
+            <button (click)="this.addInteraction('LineString')" mat-raised-button>
+              LineString
+            </button><p> </p>
+            <button (click)="this.addInteraction('Polygon')" mat-raised-button>
+              Polygon
+            </button><p> </p>
+            <button (click)="this.addInteraction('Circle')" mat-raised-button>
+              Circle
+            </button><p> </p>
+            <button (click)="this.removeInteraction()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+                <mat-icon>clear</mat-icon>
+            </button><p> </p><button (click)="this.deleteDrawing()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+                <mat-icon>delete</mat-icon>
+            </button>
+          </mat-expansion-panel>
+        </mat-accordion><p> </p>
+        <mat-accordion>
+          <mat-expansion-panel (opened)="panelOpenState = true"
+                              (closed)="panelOpenState = false">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Union Difference
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <button (click)="this.addPolygons()" mat-raised-button>
+              Add Polygon
+            </button><p> </p>
+            <button (click)="this.erasePolygons()" mat-raised-button>
+              Erase Polygon
+            </button><p> </p>
+            <button (click)="this.combine()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+                  <mat-icon>track_changes</mat-icon>
+                  Combine
+            </button>
+          </mat-expansion-panel>
+        </mat-accordion><p> </p>
 
+        <mat-accordion>
+          <mat-expansion-panel (opened)="panelOpenState = true"
+                              (closed)="panelOpenState = false">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Colour Intensity
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <button (click)="resetToDefault()" color="primary" mat-raised-button>
+              Reset to default
+            </button><p> </p>
+            Invert
+            <mat-slider
+              thumbLabel
+              (change)="this.onInvertChange($event)"
+              min="1"
+              max="100"></mat-slider><p> </p>
+            Hue
+            <mat-slider
+              thumbLabel
+              (change)="this.onHueChange($event)"
+              min="0"
+              max="360"></mat-slider><p> </p>
+            Saturation
+            <mat-slider
+              thumbLabel
+              (change)="this.onSaturationChange($event)"
+              min="1"
+              max="100"></mat-slider><p> </p>
+          </mat-expansion-panel>
+        </mat-accordion><p> </p>
+		</mat-sidenav>
+		<mat-sidenav-content>
+			<mat-sidenav-container class="example-container">
+				<mat-sidenav #sidenav2 mode="side" position="start" role="navigation" class="example-sidenav">
 
+					<div fxLayout="column" class="sidenav-normal">
+            <center>
+              <button mat-fab color="primary" (click)="sidenav2.toggle()">
+                <mat-icon>menu</mat-icon>
+              </button>
+            </center><br />
+            <mat-accordion>
+              <mat-expansion-panel (opened)="panelOpenState = true"
+                                   (closed)="panelOpenState = false">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    Brain Information
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <br>
+                <mat-form-field appearance="standard">
+                  <mat-label>Brain ID</mat-label>
+                  <input matInput placeholder="E.g. 0025">
+                </mat-form-field><br />
+                <mat-form-field appearance="standard">
+                  <mat-label>Section No</mat-label>
+                  <input (change)="this.emailUpdated($event)" matInput placeholder="E.g. 0025">
+                </mat-form-field><p> </p>
+                <mat-slide-toggle
+                    color="primary"
+                    (change)="this.onToggleTracer($event)"
+                    class="example-margin"
+                    [checked]="checked"
+                    [disabled]="disabled">
+                  Toggle Tracer
+                </mat-slide-toggle><p> </p>
+                <mat-card-actions>
+                  <button (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load</button>
+                </mat-card-actions><p> </p>
+                <br>
+              </mat-expansion-panel>
+            </mat-accordion><p> </p>
 
-
-<mat-drawer-container class="example-container" autosize>
-
-  <mat-drawer #drawer class="example-sidenav" mode="side">
-
-    <mat-accordion>
-      <mat-expansion-panel (opened)="panelOpenState = true"
-                           (closed)="panelOpenState = false">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            Brain Information
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <br>
-        <mat-form-field appearance="standard">
-          <mat-label>Section No</mat-label>
-          <input (change)="this.emailUpdated($event)" matInput placeholder="E.g. 0025">
-        </mat-form-field>
-        <mat-card-actions>
-          <button (click)="this.brainIDUpdated()" mat-raised-button>Submit</button>
-        </mat-card-actions><p> </p>
-        <mat-slide-toggle
-            color="primary"
-            (change)="this.onToggleTracer($event)"
-            class="example-margin"
-            [checked]="checked"
-            [disabled]="disabled">
-          Toggle Tracer
-        </mat-slide-toggle><p> </p>
-        <br>
-      </mat-expansion-panel>
-    </mat-accordion><p> </p>
-
-
-    <mat-accordion>
+            <mat-accordion>
+              <mat-expansion-panel (opened)="panelOpenState = true"
+                                   (closed)="panelOpenState = false">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    Atlas
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <button (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" color="primary" mat-raised-button>
+                  Save Polygons
+                </button><p> </p>
+                <button (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" color="primary" mat-raised-button>
+                  Retrieve Polygons
+                </button><p> </p>
+                <button (click)="loadPolygonsFromFirebase()" color="primary" mat-raised-button>
+                  Load Polygons
+                </button><p> </p>
+                <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); margin-left: 10px;">
+                  <div class="active-pink-3 active-pink-4 mb-4">
+                      <mat-form-field appearance="standard">
+                        <mat-label>Region Name</mat-label>
+                        <input class="form-control search-input" (change)="this.Tree($event);" matInput placeholder="E.g. Hypothalamus">
+                      </mat-form-field>
+                   </div>
+                  <div style="white-space: nowrap; font-size: 17px; font-family: 'Big Shoulders Stencil Display', cursive; font-family: 'Roboto', sans-serif;" id='atlas_info'></div>
+                </div>
+              </mat-expansion-panel>
+            </mat-accordion><p> </p>
+        
+            <mat-accordion>
+              <mat-expansion-panel (opened)="panelOpenState = true"
+                                   (closed)="panelOpenState = false">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    Layers
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-slide-toggle
+                    color="primary"
+                    (change)="this.onToggle($event)"
+                    class="example-margin"
+                    [checked]="checked"
+                    [disabled]="disabled">
+                  GeoJSON
+                </mat-slide-toggle><p> </p>
+              </mat-expansion-panel>
+            </mat-accordion><p> </p>
+        
+            <mat-accordion>
+              <mat-expansion-panel (opened)="panelOpenState = true"
+                                   (closed)="panelOpenState = false">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    REPL
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-card-content>
+                  <form>
+                    <mat-form-field mat-form-field appearance="standard">
+                      <input type="text"
+                            id = "replID"
+                            placeholder="Command line"
+                            aria-label="Number"
+                            matInput
+                            [formControl]="myControl"
+                            [matAutocomplete]="auto">
+                      <mat-autocomplete #auto="matAutocomplete">
+                        <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+                          {{option}}
+                        </mat-option>
+                      </mat-autocomplete>
+                    </mat-form-field>
+                  </form>
+                  <mat-card-actions>
+                    <button color="primary" (click)="this.REPL()" mat-raised-button>Run Command</button>
+                  </mat-card-actions>
+                </mat-card-content><p> </p>
+              </mat-expansion-panel>
+            </mat-accordion><p> </p>
       
-      <mat-expansion-panel (opened)="panelOpenState = true"
-                           (closed)="panelOpenState = false">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            Annotation Tools
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <p> </p>
-        <button (click)="this.addInteraction('Point')" mat-raised-button>
-          Point
-        </button><p> </p>
-        <button (click)="this.addInteraction('LineString')" mat-raised-button>
-          LineString
-        </button><p> </p>
-        <button (click)="this.addInteraction('Polygon')" mat-raised-button>
-          Polygon
-        </button><p> </p>
-        <button (click)="this.addInteraction('Circle')" mat-raised-button>
-          Circle
-        </button><p> </p>
-        <button (click)="this.removeInteraction()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
-            <mat-icon>clear</mat-icon>
-        </button><p> </p><button (click)="this.deleteDrawing()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
-            <mat-icon>delete</mat-icon>
-        </button>
-      </mat-expansion-panel>
-    </mat-accordion><p> </p>
-    <mat-accordion>
-      <mat-expansion-panel (opened)="panelOpenState = true"
-                           (closed)="panelOpenState = false">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            Union Difference
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <button (click)="this.addPolygons()" mat-raised-button>
-          Add Polygon
-        </button><p> </p>
-        <button (click)="this.erasePolygons()" mat-raised-button>
-          Erase Polygon
-        </button><p> </p>
-        <button (click)="this.combine()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
-              <mat-icon>track_changes</mat-icon>
-              Combine
-        </button>
-      </mat-expansion-panel>
-    </mat-accordion><p> </p>
-    
-    <mat-accordion>
-      <mat-expansion-panel (opened)="panelOpenState = true"
-                           (closed)="panelOpenState = false">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            Save & Load
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <button (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" color="primary" mat-raised-button>
-          Save Polygons
-        </button><p> </p>
-        <button (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" color="primary" mat-raised-button>
-          Retrieve Polygons
-        </button><p> </p>
-        <button (click)="loadPolygonsFromFirebase()" color="primary" mat-raised-button>
-          Load Polygons
-        </button><p> </p>
-      </mat-expansion-panel>
-    </mat-accordion><p> </p>
-
-    <mat-accordion>
-      <mat-expansion-panel (opened)="panelOpenState = true"
-                           (closed)="panelOpenState = false">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            Colour Intensity
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <button (click)="resetToDefault()" color="primary" mat-raised-button>
-          Reset to default
-        </button><p> </p>
-        Invert
-        <mat-slider
-          thumbLabel
-          (change)="this.onInvertChange($event)"
-          min="1"
-          max="100"></mat-slider><p> </p>
-        Hue
-        <mat-slider
-          thumbLabel
-          (change)="this.onHueChange($event)"
-          min="0"
-          max="360"></mat-slider><p> </p>
-        Saturation
-        <mat-slider
-          thumbLabel
-          (change)="this.onSaturationChange($event)"
-          min="1"
-          max="100"></mat-slider><p> </p>
-      </mat-expansion-panel>
-    </mat-accordion><p> </p>
 
 
-    <mat-accordion>
-      <mat-expansion-panel (opened)="panelOpenState = true"
-                           (closed)="panelOpenState = false">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            Layers
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <mat-slide-toggle
-            color="primary"
-            (change)="this.onToggle($event)"
-            class="example-margin"
-            [checked]="checked"
-            [disabled]="disabled">
-          GeoJSON
-        </mat-slide-toggle><p> </p>
-      </mat-expansion-panel>
-    </mat-accordion><p> </p>
+					</div>
 
-    <mat-accordion>
-      <mat-expansion-panel (opened)="panelOpenState = true"
-                           (closed)="panelOpenState = false">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            Tree
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); overflow-y : scroll; margin-left: 10px;">
-          <div class="active-pink-3 active-pink-4 mb-4">
-              <mat-form-field appearance="standard">
-                <mat-label>Region Name</mat-label>
-                <input class="form-control search-input" (change)="this.Tree($event);" matInput placeholder="E.g. Hypothalamus">
-              </mat-form-field>
-             <!--<input class="form-control search-input" type="text" placeholder="SearchBar" aria-label="SearchBar">-->
-           </div>
-          <div style="width: 30em; overflow-x: auto; white-space: nowrap;" id='atlas_info'></div>
-        </div>
-      </mat-expansion-panel>
-    </mat-accordion><p> </p>
+				</mat-sidenav>
+				<mat-sidenav-content>
+					<mat-toolbar role="toolbar" class="main-header mat-elevation-z1 sticky-header">
+              <button mat-icon-button class="example-icon" (click)="sidenav2.toggle()"  aria-label="Example icon-button with menu icon">
+                <mat-icon>menu</mat-icon>
+              </button>
+              <span>Next Gen Viewer</span>
+              <span class="example-spacer"></span>
+                <button (click)="this.deleteDrawing()" mat-raised-button>
+                  <mat-icon>undo</mat-icon>
+                </button>&nbsp;
+                <button (click)="this.redoDrawing()" mat-raised-button>
+                  <mat-icon>redo</mat-icon>
+                </button>&nbsp;
+                <button color="accent" (click)="sidenav1.toggle()" mat-raised-button>
+                  Toggle <mat-icon>settings</mat-icon>
+                </button>&nbsp;
+              <p>  </p>
+              <button mat-icon-button class="example-icon" aria-label="Example icon-button with share icon">
+              <mat-icon>share</mat-icon>
+              </button>
+					</mat-toolbar>
 
-  </mat-drawer>
+          <div class="example-sidenav-content">
+            <div id="map" class="map"></div>
+          </div> 
 
-  <div class="example-sidenav-content">
-    <div id="map" class="map">
-    </div>
-    <mat-card *ngIf="showFillerREPL" class="example-card">
-      <mat-card-header>
-        <mat-card-title>REPL Bot</mat-card-title>
-        <mat-card-subtitle>Automate NGV Task using REPL Bot</mat-card-subtitle>
-      </mat-card-header>
-      <!--<img mat-card-image src="https://img.freepik.com/free-vector/set-cute-robot-ai-character-with-circuits-background_99413-92.jpg" height="200">-->
-      <mat-card-content>
-        <form class="example-form">
-          <mat-form-field class="example-full-width">
-            <input type="text"
-                   id = "replID"
-                   placeholder="Command line"
-                   aria-label="Number"
-                   matInput
-                   [formControl]="myControl"
-                   [matAutocomplete]="auto">
-            <mat-autocomplete #auto="matAutocomplete">
-              <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
-                {{option}}
-              </mat-option>
-            </mat-autocomplete>
-          </mat-form-field>
-        </form>
-        <mat-card-actions>
-          <button (click)="this.REPL()" mat-raised-button>Submit</button>
-        </mat-card-actions>
-      </mat-card-content>
-
-    </mat-card>
-
-  </div>
-
-</mat-drawer-container>
+				</mat-sidenav-content>
+			</mat-sidenav-container>
+		</mat-sidenav-content>
+	</mat-sidenav-container>
+</div>
