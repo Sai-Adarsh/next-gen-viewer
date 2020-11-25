@@ -50,6 +50,11 @@ export class AppComponent implements AfterViewInit, OnInit  {
       duration: 2000,
     });
   }
+  
+  changeHeaderTest(message: String) {
+    this.headerTest = message;
+    console.log(this.headerTest);
+  }
 
   myControl = new FormControl();
   options: string[] = ['turnOnGEOJson', 'turnOffGEOJson', 'savePolygons', 'retrievePolygons', 'loadPolygons'];
@@ -173,8 +178,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public styleErase : Style;
   public addPolygon : Draw;
   public erasePolygon : Draw;
-
- 
+  public headerTest: String = "Home";
 
   /**
    * Initialise the map.

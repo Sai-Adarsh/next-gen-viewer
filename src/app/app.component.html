@@ -60,49 +60,69 @@
         <mat-icon>toggle_on</mat-icon>
       </button><p> </p>-->
       <mat-accordion>
-        <mat-expansion-panel (opened)="panelOpenState = true"
-                            (closed)="panelOpenState = false">
+        <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Annotation Tools');"
+                            (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>create</mat-icon>
             </mat-panel-title>
           </mat-expansion-panel-header>
-          <button (click)="this.addInteraction('Point')" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('Point Annotation');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Point')" mat-raised-button>
             <mat-icon>group_work</mat-icon>
           </button><p> </p>
-          <button (click)="this.addInteraction('LineString')" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('LineString');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('LineString')" mat-raised-button>
             <mat-icon>clear_all</mat-icon>
           </button><p> </p>
-          <button (click)="this.addInteraction('Polygon')" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('Polugon');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Polygon')" mat-raised-button>
             <mat-icon>change_history</mat-icon>
           </button><p> </p>
-          <button (click)="this.addInteraction('Circle')" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('Circle');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Circle')" mat-raised-button>
             <mat-icon>circle</mat-icon>
           </button><p> </p>
-          <button (click)="this.removeInteraction()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+          <button (mouseenter) ="this.changeHeaderTest('Remove Interaction');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.removeInteraction()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
               <mat-icon>clear</mat-icon>
-          </button><p> </p><button (click)="this.deleteDrawing()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+          </button><p> </p>
+          <button (mouseenter) ="this.changeHeaderTest('Delete Annotations');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.deleteDrawing()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
               <mat-icon>delete</mat-icon>
           </button>
         </mat-expansion-panel><p> </p>
 
-        <mat-expansion-panel (opened)="panelOpenState = true"
-                            (closed)="panelOpenState = false">
+        <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Union & Difference');"
+                            (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>add_circle</mat-icon>
             </mat-panel-title>
           </mat-expansion-panel-header>
-          <button (click)="this.addPolygons()" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('Add Polygon');"  (mouseleave) ="this.changeHeaderTest('Union & Difference');"  (click)="this.addPolygons()" mat-raised-button>
             <mat-icon>add_circle</mat-icon>
           </button><p> </p>
-          <button (click)="this.erasePolygons()" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('Erase Polygon');"  (mouseleave) ="this.changeHeaderTest('Union & Difference');" (click)="this.erasePolygons()" mat-raised-button>
             <mat-icon>remove_circle</mat-icon>
           </button><p> </p>
-          <button (click)="this.combine()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+          <button (mouseenter) ="this.changeHeaderTest('Combine');"  (mouseleave) ="this.changeHeaderTest('Union & Difference');"(click)="this.combine()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
             <mat-icon>swap_horizontal</mat-icon>
           </button>
         </mat-expansion-panel><p> </p>
+
+          <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Union & Difference');"
+          (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
+            <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon> cloud</mat-icon>
+            </mat-panel-title>
+            </mat-expansion-panel-header>
+              <button (mouseenter) ="this.changeHeaderTest('Add Polygon');"  (mouseleave) ="this.changeHeaderTest('Union & Difference');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" mat-raised-button>
+                <mat-icon>save</mat-icon>
+              </button><p> </p>
+              <button (mouseenter) ="this.changeHeaderTest('Erase Polygon');"  (mouseleave) ="this.changeHeaderTest('Union & Difference');" (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" mat-raised-button>
+                <mat-icon>cloud_download</mat-icon>
+              </button><p> </p>
+              <button (mouseenter) ="this.changeHeaderTest('Combine');"  (mouseleave) ="this.changeHeaderTest('Union & Difference');" (click)="loadPolygonsFromFirebase()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+                <mat-icon>publish</mat-icon>
+              </button>
+          </mat-expansion-panel><p> </p>
+
       </mat-accordion>
     </mat-sidenav>
 
@@ -117,8 +137,8 @@
               </button>
             </center><br />
             <mat-accordion>
-              <mat-expansion-panel #panel1 (opened)="panelOpenState = true; "
-                                   (closed)="panelOpenState = false">
+              <mat-expansion-panel #panel1 (opened)="panelOpenState = true; this.changeHeaderTest('Brain Information');"
+                                   (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
                   <mat-panel-title>
                     Brain Information
@@ -146,22 +166,14 @@
                 </mat-card-actions><p> </p>
                 <br>
               </mat-expansion-panel><p></p>
-              <mat-expansion-panel #panel2 (opened)="panelOpenState = true"
-                                   (closed)="panelOpenState = false">
+              <mat-expansion-panel #panel2 (opened)="panelOpenState = true; this.changeHeaderTest('Atlas');"
+                                   (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
                   <mat-panel-title>
                     Atlas
                   </mat-panel-title>
                 </mat-expansion-panel-header>
-                <button (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" color="primary" mat-raised-button>
-                  Save Polygons
-                </button><p> </p>
-                <button (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" color="primary" mat-raised-button>
-                  Retrieve Polygons
-                </button><p> </p>
-                <button (click)="loadPolygonsFromFirebase()" color="primary" mat-raised-button>
-                  Load Polygons
-                </button><p> </p>
+                
                 <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); margin-left: 10px;">
                   <div class="active-pink-3 active-pink-4 mb-4">
                       <mat-form-field appearance="standard">
@@ -172,24 +184,24 @@
                   <div style="white-space: nowrap; font-family: 'Big Shoulders Stencil Display', cursive; font-family: 'Roboto', sans-serif;" id='atlas_info'></div>
                 </div>
               </mat-expansion-panel><p></p>
-              <mat-expansion-panel (opened)="panelOpenState = true"
-                                   (closed)="panelOpenState = false">
+              <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Injection Region');"
+                                   (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
                   <mat-panel-title>
                     Injection Region
                   </mat-panel-title>
                 </mat-expansion-panel-header>
               </mat-expansion-panel><p></p>
-              <mat-expansion-panel (opened)="panelOpenState = true"
-                                   (closed)="panelOpenState = false">
+              <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Process Annotation');"
+                                   (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
                   <mat-panel-title>
                     Process Annotation
                   </mat-panel-title>
                 </mat-expansion-panel-header>
               </mat-expansion-panel><p></p>
-              <mat-expansion-panel (opened)="panelOpenState = true"
-                                   (closed)="panelOpenState = false">
+              <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Point Annotation');"
+                                   (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
                   <mat-panel-title>
                     Point Annotation
@@ -197,16 +209,16 @@
                 </mat-expansion-panel-header>
               </mat-expansion-panel><p></p>
               
-                  <mat-expansion-panel (opened)="panelOpenState = true"
-                                      (closed)="panelOpenState = false">
+                  <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Development Tools');"
+                                      (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                     <mat-expansion-panel-header>
                       <mat-panel-title>
                         Development Tools
                       </mat-panel-title>
                     </mat-expansion-panel-header>
                     <mat-accordion>
-                      <mat-expansion-panel (opened)="panelOpenState = true"
-                                      (closed)="panelOpenState = false">
+                      <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Development Tool | REPL');"
+                                      (closed)="panelOpenState = false; this.changeHeaderTest('Development Tool');">
                     <mat-expansion-panel-header>
                       <mat-panel-title>
                         REPL
@@ -235,8 +247,8 @@
                     </mat-card-content>
                   </mat-expansion-panel><p> </p>
 
-                  <mat-expansion-panel (opened)="panelOpenState = true"
-                                (closed)="panelOpenState = false">
+                  <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Development Tool | Colour Intensity');"
+                                (closed)="panelOpenState = false; this.changeHeaderTest('Development Tool');">
                     <mat-expansion-panel-header>
                       <mat-panel-title>
                         Colour Intensity
@@ -265,8 +277,8 @@
                       max="100"></mat-slider><p> </p>
                   </mat-expansion-panel><p> </p>
 
-                  <mat-expansion-panel (opened)="panelOpenState = true"
-                                   (closed)="panelOpenState = false">
+                  <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Development Tool | Layers');"
+                                   (closed)="panelOpenState = false; this.changeHeaderTest('Development Tool');">
                 <mat-expansion-panel-header>
                   <mat-panel-title>
                     Layers
@@ -297,6 +309,9 @@
                 <mat-icon>menu</mat-icon>
               </button>
               <span>Next Gen Viewer</span>&nbsp;&nbsp;
+              <mat-chip-list aria-label="Fish selection">
+                <mat-chip>{{ this.headerTest }}</mat-chip>
+              </mat-chip-list>
               <!--<button (click)="this.deleteDrawing()" mat-raised-button>
                 <mat-icon>undo</mat-icon>
               </button>&nbsp;

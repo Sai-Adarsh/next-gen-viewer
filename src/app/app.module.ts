@@ -20,6 +20,7 @@ import {MatSliderModule} from '@angular/material/slider';
 import { HttpClientModule } from '@angular/common/http';
 import { ReplserviceService } from './replservice.service';
 import { MatTreeModule } from '@angular/material/tree';
+import {MatChipsModule} from '@angular/material/chips';
 
 @NgModule({
   declarations: [
@@ -45,6 +46,7 @@ import { MatTreeModule } from '@angular/material/tree';
     MatSliderModule,
     HttpClientModule,
     MatTreeModule,
+    MatChipsModule,
   ],
   providers: [AppComponent],
   bootstrap: [AppComponent]
