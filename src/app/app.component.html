@@ -105,20 +105,20 @@
           </button>
         </mat-expansion-panel><p> </p>
 
-          <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Union & Difference');"
+          <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Save & Load');"
           (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
             <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon> cloud</mat-icon>
             </mat-panel-title>
             </mat-expansion-panel-header>
-              <button (mouseenter) ="this.changeHeaderTest('Add Polygon');"  (mouseleave) ="this.changeHeaderTest('Union & Difference');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" mat-raised-button>
+              <button (mouseenter) ="this.changeHeaderTest('Save Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" mat-raised-button>
                 <mat-icon>save</mat-icon>
               </button><p> </p>
-              <button (mouseenter) ="this.changeHeaderTest('Erase Polygon');"  (mouseleave) ="this.changeHeaderTest('Union & Difference');" (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" mat-raised-button>
+              <button (mouseenter) ="this.changeHeaderTest('Retrieve Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" mat-raised-button>
                 <mat-icon>cloud_download</mat-icon>
               </button><p> </p>
-              <button (mouseenter) ="this.changeHeaderTest('Combine');"  (mouseleave) ="this.changeHeaderTest('Union & Difference');" (click)="loadPolygonsFromFirebase()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+              <button (mouseenter) ="this.changeHeaderTest('Load Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="loadPolygonsFromFirebase()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
                 <mat-icon>publish</mat-icon>
               </button>
           </mat-expansion-panel><p> </p>
@@ -137,9 +137,9 @@
               </button>
             </center><br />
             <mat-accordion>
-              <mat-expansion-panel class="block-expansion" #panel1 (opened)="panelOpenState = true; this.changeHeaderTest('Brain Information');"
+              <mat-expansion-panel #panel1 (opened)="panelOpenState = true; this.changeHeaderTest('Brain Information');"
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
-                <mat-expansion-panel-header class="block-expansion">
+                <mat-expansion-panel-header>
                   <mat-panel-title>
                     Brain Information
                   </mat-panel-title>
