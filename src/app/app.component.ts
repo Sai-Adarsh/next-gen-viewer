@@ -36,6 +36,11 @@ import { ReplserviceService } from './replservice.service';
 import * as polygonClipping from 'polygon-clipping';
 declare var $: any;
 
+interface Tracer {
+  value: string;
+  viewValue: string;
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -156,6 +161,8 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public treeString;
   public urlData;
   public secNo;
+  public brainID;
+  public PMDID;
 
   /** OL-Map. */
   map: Map;
@@ -179,7 +186,13 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public addPolygon : Draw;
   public erasePolygon : Draw;
   public headerTest: String = "Home";
+  selectedValue: string;
+  selectedCar: string;
 
+  tracers: Tracer[] = [
+    {value: 'fluro', viewValue: 'Fluro'},
+    {value: 'nissl', viewValue: 'Nissl'}
+  ];
   /**
    * Initialise the map.
    */
@@ -203,6 +216,9 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
     this.defaultGeoJSONSecNo = 60;
     this.secNo = 60;
+    this.brainID = 4958
+    this.PMDID = 'PMD2495';
+
     this.sources = {
       osm: new SourceOsm(),
       stamen: new SourceStamen({ layer: 'toner' }),
@@ -314,7 +330,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
     this.zoomifySource = new Zoomify({
       url: this.defaultURL,
-      size: [24000, 24000],
+      size: [24000, 18000],
       crossOrigin: 'anonymous',
       zDirection: -1, // Ensure we get a tile with the screen resolution or higher
     });
@@ -472,7 +488,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.modifyVector.getSource().clear();
     if (event.checked == true) {
       this.lastChecked = true;
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2495/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/' + this.PMDID + '/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
         var atlasstyle = new Style({
           fill: new Fill({
               color: 'rgba(255, 255, 255, 0)'
@@ -637,6 +653,11 @@ export class AppComponent implements AfterViewInit, OnInit  {
     
   }
 
+  getBrainIDUpdated(event) {
+    this.brainID = parseInt(event.target.value);    
+    console.log("brainid", this.brainID);
+  }
+
   emailUpdated(event) {
     this.secNo = parseInt(event.target.value);
     this.defaultGeoJSONSecNo = parseInt(event.target.value);
@@ -646,9 +667,11 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
   brainIDUpdated() {
     this.modifyVector.setVisible(false);
-    this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4958/').subscribe(res=>{
+    console.log(this.brainID, this.secNo);
+    this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/' + this.brainID + '/').subscribe(res=>{
       this.urlData = res;
-      console.log(res);
+      console.log("here", res);
+      this.PMDID = this.urlData.F[this.secNo][1].split('/brainimg')[1].slice(1, 8);
       var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.F[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
       this.zoomifySource = new Zoomify({
         url: newURL,
@@ -659,10 +682,22 @@ export class AppComponent implements AfterViewInit, OnInit  {
       this.defaultURL = newURL;
       this.imagery.setSource(this.zoomifySource);
       console.log(this.defaultURL);
+      if (this.selectedValue == 'nissl') {
+        var event = {
+          checked: true,
+        };
+        this.onToggleTracer(event);
+      }
+      else {
+        var event = {
+          checked: false,
+        };
+        this.onToggleTracer(event);
+      }
     });
     console.log(this.lastChecked, this.defaultGeoJSONSecNo);
     if (this.lastChecked == true) {
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2495/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/' + this.PMDID + '/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
         var atlasstyle = new Style({
           fill: new Fill({
               color: 'rgba(255, 255, 255, 0)'
@@ -695,15 +730,23 @@ export class AppComponent implements AfterViewInit, OnInit  {
       });
       this.modifyVector.setVisible(true);
     }
+
   }
 
 
   onToggleTracer(event) {
     if (event.checked == true) {
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4958/').subscribe(res=>{
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/' + this.brainID + '/').subscribe(res=>{
         this.urlData = res;
         console.log(res);
-        var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.N[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
+        var toggleSecNo;
+        if (this.secNo - 4 < 0) {
+          toggleSecNo = 0;
+        }
+        else {
+          toggleSecNo = this.secNo - 4;
+        }
+        var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.N[toggleSecNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
         this.zoomifySource = new Zoomify({
           url: newURL,
           size: [24000, 24000],
@@ -717,7 +760,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
       console.log(this.defaultURL, this.urlData);
     }
     else {
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/4958/').subscribe(res=>{
+      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/' + this.brainID + '/').subscribe(res=>{
         this.urlData = res;
         console.log(res);
         var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.F[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";

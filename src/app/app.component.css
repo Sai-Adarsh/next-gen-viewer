@@ -33,7 +33,11 @@
 .example-container {
   width: 100%;
   height: 100%;
-  overflow: hidden;
+}
+
+.example-map-container {
+  width: 100%;
+  height: 100%;
 }
 
 .example-sidenav-content {
@@ -56,6 +60,10 @@
 .example-header-image {
   background-image: url('https://material.angular.io/assets/img/examples/shiba1.jpg');
   background-size: cover;
+}
+
+.block-expansion {
+  overflow: hidden;
 }
 
 /* maps css */

@@ -21,6 +21,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ReplserviceService } from './replservice.service';
 import { MatTreeModule } from '@angular/material/tree';
 import {MatChipsModule} from '@angular/material/chips';
+import {MatSelectModule} from '@angular/material/select';
 
 @NgModule({
   declarations: [
@@ -47,6 +48,7 @@ import {MatChipsModule} from '@angular/material/chips';
     HttpClientModule,
     MatTreeModule,
     MatChipsModule,
+    MatSelectModule
   ],
   providers: [AppComponent],
   bootstrap: [AppComponent]

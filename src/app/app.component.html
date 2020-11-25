@@ -127,7 +127,7 @@
     </mat-sidenav>
 
 		<mat-sidenav-content>
-			<mat-sidenav-container class="example-container">
+			<mat-sidenav-container class="example-map-container">
 				<mat-sidenav #sidenav2 mode="side" position="start" role="navigation" class="example-sidenav">
 
 					<div fxLayout="column" class="sidenav-normal">
@@ -137,32 +137,44 @@
               </button>
             </center><br />
             <mat-accordion>
-              <mat-expansion-panel #panel1 (opened)="panelOpenState = true; this.changeHeaderTest('Brain Information');"
+              <mat-expansion-panel class="block-expansion" #panel1 (opened)="panelOpenState = true; this.changeHeaderTest('Brain Information');"
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
-                <mat-expansion-panel-header>
+                <mat-expansion-panel-header class="block-expansion">
                   <mat-panel-title>
                     Brain Information
                   </mat-panel-title>
                 </mat-expansion-panel-header>
                 <br>
-                <mat-form-field appearance="standard">
+                <mat-form-field appearance="outline">
                   <mat-label>Brain ID</mat-label>
-                  <input matInput placeholder="E.g. 4240">
-                </mat-form-field><br />
-                <mat-form-field appearance="standard">
+                  <input (change)="this.getBrainIDUpdated($event)"matInput placeholder="E.g. 4240">
+                </mat-form-field>
+                <mat-form-field appearance="outline">
                   <mat-label>Section No</mat-label>
                   <input (change)="this.emailUpdated($event)" matInput placeholder="E.g. 25">
                 </mat-form-field><p> </p>
-                <mat-slide-toggle
-                    color="primary"
-                    (change)="this.onToggleTracer($event)"
-                    class="example-margin"
-                    [checked]="checked"
-                    [disabled]="disabled">
-                  Toggle Tracer
-                </mat-slide-toggle><p> </p>
+                <form>
+                  <mat-form-field appearance="fill">
+                    <mat-label>Select Tracer</mat-label>
+                    <mat-select [(ngModel)]="selectedValue" name="tracer">
+                      <mat-option *ngFor="let tracer of tracers" [value]="tracer.value">
+                        {{tracer.viewValue}}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </form>
+                <!--
+                  <mat-slide-toggle
+                      color="primary"
+                      (change)="this.onToggleTracer($event)"
+                      class="example-margin"
+                      [checked]="checked"
+                      [disabled]="disabled">
+                    Toggle Tracer
+                  </mat-slide-toggle>
+                -->          
                 <mat-card-actions>
-                  <button (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load</button>
+                  <button (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>
                 </mat-card-actions><p> </p>
                 <br>
               </mat-expansion-panel><p></p>
@@ -176,7 +188,7 @@
                 
                 <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); margin-left: 10px;">
                   <div class="active-pink-3 active-pink-4 mb-4">
-                      <mat-form-field appearance="standard">
+                      <mat-form-field appearance="outline">
                         <mat-label>Region Name</mat-label>
                         <input class="form-control search-input" (change)="this.Tree($event);" matInput placeholder="E.g. Hypothalamus">
                       </mat-form-field>
