@@ -326,7 +326,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     ]
 
     this.zoomifyLayer = [
-      this.imagery, this.vector, this.modifyVector
+      this.imagery, this.modifyVector, this.vector
     ]
 
     this.modifyVector.setVisible(false);
