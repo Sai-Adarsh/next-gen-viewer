@@ -73,7 +73,7 @@
           <button (mouseenter) ="this.changeHeaderTest('LineString');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('LineString')" mat-raised-button>
             <mat-icon>clear_all</mat-icon>
           </button><p> </p>
-          <button (mouseenter) ="this.changeHeaderTest('Polugon');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Polygon')" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('Polygon');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Polygon')" mat-raised-button>
             <mat-icon>change_history</mat-icon>
           </button><p> </p>
           <button (mouseenter) ="this.changeHeaderTest('Circle');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Circle')" mat-raised-button>
@@ -113,14 +113,40 @@
             </mat-panel-title>
             </mat-expansion-panel-header>
               <button (mouseenter) ="this.changeHeaderTest('Save Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" mat-raised-button>
-                <mat-icon>save</mat-icon>
+                <mat-icon>cloud_import</mat-icon>
               </button><p> </p>
               <button (mouseenter) ="this.changeHeaderTest('Retrieve Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" mat-raised-button>
                 <mat-icon>cloud_download</mat-icon>
               </button><p> </p>
+              <!--
               <button (mouseenter) ="this.changeHeaderTest('Load Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="loadPolygonsFromFirebase()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
                 <mat-icon>publish</mat-icon>
               </button>
+              -->
+              
+          </mat-expansion-panel><p> </p>
+
+
+          <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Import & Export');"
+          (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
+            <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>folder</mat-icon>
+            </mat-panel-title>
+            </mat-expansion-panel-header>
+              <input #file type="file" style="display:none;" (change)="this.importFile($event)" />
+              <button (mouseenter) ="this.changeHeaderTest('Import Features');"  (mouseleave) ="this.changeHeaderTest('Import & Export');"  (click)="openSnackBar('Importing', 'Dismiss'); file.click();" mat-raised-button>
+                <mat-icon>create_new_folder</mat-icon>
+              </button><p> </p>
+              <button (mouseenter) ="this.changeHeaderTest('Export Features');"  (mouseleave) ="this.changeHeaderTest('Import & Export');" (click)="openSnackBar('Exporting', 'Dismiss'); this.exportFile();" mat-raised-button>
+                <mat-icon>cloud_download</mat-icon>
+              </button><p> </p>
+              <!--
+              <button (mouseenter) ="this.changeHeaderTest('Load Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="loadPolygonsFromFirebase()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
+                <mat-icon>publish</mat-icon>
+              </button>
+              -->
+              
           </mat-expansion-panel><p> </p>
 
       </mat-accordion>
@@ -146,7 +172,7 @@
                 </mat-expansion-panel-header>
                 <br>
                 <mat-form-field appearance="outline">
-                  <mat-label>Brain ID</mat-label>
+                  <mat-label>Series ID</mat-label>
                   <input (change)="this.getBrainIDUpdated($event)"matInput placeholder="E.g. 4240">
                 </mat-form-field>
                 <mat-form-field appearance="outline">
@@ -185,7 +211,11 @@
                     Atlas
                   </mat-panel-title>
                 </mat-expansion-panel-header>
-                
+                <!--
+                  <button (click)="this.displayFeatures();" mat-raised-button>
+                    <mat-icon>cloud_download</mat-icon>
+                  </button><p> </p>
+                -->
                 <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); margin-left: 10px;">
                   <div class="active-pink-3 active-pink-4 mb-4">
                       <mat-form-field appearance="outline">
