@@ -60,9 +60,8 @@
         <mat-icon>toggle_on</mat-icon>
       </button><p> </p>-->
       <mat-accordion>
-        <!-- <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Annotation Tools');"
-                            (closed)="panelOpenState = false; this.changeHeaderTest('Home');"> -->
-          <mat-expansion-panel  [expanded]="panelOpenState">
+        <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Annotation Tools');"
+                            (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>create</mat-icon>
@@ -74,7 +73,7 @@
           <button (mouseenter) ="this.changeHeaderTest('LineString');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('LineString')" mat-raised-button>
             <mat-icon>clear_all</mat-icon>
           </button><p> </p>
-          <button (mouseenter) ="this.changeHeaderTest('Polygon');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Polygon')" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('Polugon');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Polygon')" mat-raised-button>
             <mat-icon>change_history</mat-icon>
           </button><p> </p>
           <button (mouseenter) ="this.changeHeaderTest('Circle');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Circle')" mat-raised-button>
@@ -113,12 +112,12 @@
               <mat-icon> cloud</mat-icon>
             </mat-panel-title>
             </mat-expansion-panel-header>
-              <button (mouseenter) ="this.changeHeaderTest('Save Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase();retrievePolygonsFromFirebase();" mat-raised-button>
+              <button (mouseenter) ="this.changeHeaderTest('Save Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" mat-raised-button>
                 <mat-icon>save</mat-icon>
               </button><p> </p>
-              <!-- <button (mouseenter) ="this.changeHeaderTest('Retrieve Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="retrievePolygonsFromFirebase();openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" mat-raised-button>
+              <button (mouseenter) ="this.changeHeaderTest('Retrieve Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" mat-raised-button>
                 <mat-icon>cloud_download</mat-icon>
-              </button><p> </p> -->
+              </button><p> </p>
               <button (mouseenter) ="this.changeHeaderTest('Load Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="loadPolygonsFromFirebase()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
                 <mat-icon>publish</mat-icon>
               </button>
@@ -145,6 +144,7 @@
                     Brain Information
                   </mat-panel-title>
                 </mat-expansion-panel-header>
+                <br>
                 <mat-form-field appearance="outline">
                   <mat-label>Brain ID</mat-label>
                   <input (change)="this.getBrainIDUpdated($event)"matInput placeholder="E.g. 4240">
@@ -152,7 +152,7 @@
                 <mat-form-field appearance="outline">
                   <mat-label>Section No</mat-label>
                   <input (change)="this.emailUpdated($event)" matInput placeholder="E.g. 25">
-                </mat-form-field>
+                </mat-form-field><p> </p>
                 <form>
                   <mat-form-field appearance="fill">
                     <mat-label>Select Tracer</mat-label>
@@ -175,7 +175,8 @@
                 -->          
                 <mat-card-actions>
                   <button (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>
-                </mat-card-actions>
+                </mat-card-actions><p> </p>
+                <br>
               </mat-expansion-panel><p></p>
               <mat-expansion-panel #panel2 (opened)="panelOpenState = true; this.changeHeaderTest('Atlas');"
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
@@ -192,14 +193,14 @@
                         <input class="form-control search-input" (change)="this.Tree($event);" matInput placeholder="E.g. Hypothalamus">
                       </mat-form-field>
                    </div>
-                  <div style="white-space: nowrap; font-size:16px; font-family: 'Roboto', sans-serif;" id='atlas_info'></div>
+                  <div style="white-space: nowrap; font-family: 'Big Shoulders Stencil Display', cursive; font-family: 'Roboto', sans-serif;" id='atlas_info'></div>
                 </div>
               </mat-expansion-panel><p></p>
               <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Injection Region');"
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
                   <mat-panel-title>
-                  <button (click)="togglePanel()">Injection Region</button>
+                    Injection Region
                   </mat-panel-title>
                 </mat-expansion-panel-header>
               </mat-expansion-panel><p></p>

@@ -106,14 +106,14 @@ export class AppComponent implements AfterViewInit, OnInit  {
             }
           })
           .jstree({ 
-            "plugins" : [ "search"],
+            "plugins" : ["search"],
             'core' : {
               'themes': {
                 'name': 'proton',
+                'responsive': true,
                 'icons': false,
                 'variant': 'large',
                 'dots': true,
-                'responsive': true
               },
               'multiple': false,
               // 'check_callback': true,
@@ -189,8 +189,8 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public addPolygon : Draw;
   public erasePolygon : Draw;
   public headerTest: String = "Home";
-  selectedValue: string;
-  selectedCar: string;
+  public selectedValue: string;
+  public selectedCar: string;
 
   tracers: Tracer[] = [
     {value: 'fluro', viewValue: 'Fluro'},
@@ -333,7 +333,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
     this.zoomifySource = new Zoomify({
       url: this.defaultURL,
-      size: [24000, 18000],
+      size: [24000, 24000],
       crossOrigin: 'anonymous',
       zDirection: -1, // Ensure we get a tile with the screen resolution or higher
     });
@@ -678,7 +678,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
       var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.F[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
       this.zoomifySource = new Zoomify({
         url: newURL,
-        size: [24000, 24000],
+        size: [24000, 18000],
         crossOrigin: 'anonymous',
         zDirection: -1, // Ensure we get a tile with the screen resolution or higher
       });
