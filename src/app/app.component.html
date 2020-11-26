@@ -60,8 +60,9 @@
         <mat-icon>toggle_on</mat-icon>
       </button><p> </p>-->
       <mat-accordion>
-        <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Annotation Tools');"
-                            (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
+        <!-- <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Annotation Tools');"
+                            (closed)="panelOpenState = false; this.changeHeaderTest('Home');"> -->
+          <mat-expansion-panel  [expanded]="panelOpenState">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>create</mat-icon>
@@ -73,7 +74,7 @@
           <button (mouseenter) ="this.changeHeaderTest('LineString');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('LineString')" mat-raised-button>
             <mat-icon>clear_all</mat-icon>
           </button><p> </p>
-          <button (mouseenter) ="this.changeHeaderTest('Polugon');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Polygon')" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('Polygon');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Polygon')" mat-raised-button>
             <mat-icon>change_history</mat-icon>
           </button><p> </p>
           <button (mouseenter) ="this.changeHeaderTest('Circle');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Circle')" mat-raised-button>
@@ -112,12 +113,12 @@
               <mat-icon> cloud</mat-icon>
             </mat-panel-title>
             </mat-expansion-panel-header>
-              <button (mouseenter) ="this.changeHeaderTest('Save Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" mat-raised-button>
+              <button (mouseenter) ="this.changeHeaderTest('Save Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase();retrievePolygonsFromFirebase();" mat-raised-button>
                 <mat-icon>save</mat-icon>
               </button><p> </p>
-              <button (mouseenter) ="this.changeHeaderTest('Retrieve Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" mat-raised-button>
+              <!-- <button (mouseenter) ="this.changeHeaderTest('Retrieve Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="retrievePolygonsFromFirebase();openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" mat-raised-button>
                 <mat-icon>cloud_download</mat-icon>
-              </button><p> </p>
+              </button><p> </p> -->
               <button (mouseenter) ="this.changeHeaderTest('Load Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="loadPolygonsFromFirebase()" mat-raised-button color="primary" aria-label="Example icon button with a menu icon">
                 <mat-icon>publish</mat-icon>
               </button>
@@ -198,7 +199,7 @@
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
                   <mat-panel-title>
-                    Injection Region
+                  <button (click)="togglePanel()">Injection Region</button>
                   </mat-panel-title>
                 </mat-expansion-panel-header>
               </mat-expansion-panel><p></p>
