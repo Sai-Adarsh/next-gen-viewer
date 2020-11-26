@@ -106,10 +106,13 @@ export class AppComponent implements AfterViewInit, OnInit  {
             }
           })
           .jstree({ 
-            "plugins" : [ "wholerow", "search"],
+            "plugins" : [ "search"],
             'core' : {
               'themes': {
                 'name': 'proton',
+                'icons': false,
+                'variant': 'large',
+                'dots': true,
                 'responsive': true
               },
               'multiple': false,

@@ -144,7 +144,6 @@
                     Brain Information
                   </mat-panel-title>
                 </mat-expansion-panel-header>
-                <br>
                 <mat-form-field appearance="outline">
                   <mat-label>Brain ID</mat-label>
                   <input (change)="this.getBrainIDUpdated($event)"matInput placeholder="E.g. 4240">
@@ -152,7 +151,7 @@
                 <mat-form-field appearance="outline">
                   <mat-label>Section No</mat-label>
                   <input (change)="this.emailUpdated($event)" matInput placeholder="E.g. 25">
-                </mat-form-field><p> </p>
+                </mat-form-field>
                 <form>
                   <mat-form-field appearance="fill">
                     <mat-label>Select Tracer</mat-label>
@@ -175,8 +174,7 @@
                 -->          
                 <mat-card-actions>
                   <button (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>
-                </mat-card-actions><p> </p>
-                <br>
+                </mat-card-actions>
               </mat-expansion-panel><p></p>
               <mat-expansion-panel #panel2 (opened)="panelOpenState = true; this.changeHeaderTest('Atlas');"
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
@@ -193,7 +191,7 @@
                         <input class="form-control search-input" (change)="this.Tree($event);" matInput placeholder="E.g. Hypothalamus">
                       </mat-form-field>
                    </div>
-                  <div style="white-space: nowrap; font-family: 'Big Shoulders Stencil Display', cursive; font-family: 'Roboto', sans-serif;" id='atlas_info'></div>
+                  <div style="white-space: nowrap; font-size:16px; font-family: 'Roboto', sans-serif;" id='atlas_info'></div>
                 </div>
               </mat-expansion-panel><p></p>
               <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Injection Region');"
