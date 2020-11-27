@@ -34,7 +34,6 @@ import Polygon from 'ol/geom/Polygon';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ReplserviceService } from './replservice.service';
 import * as polygonClipping from 'polygon-clipping';
-
 declare var $: any;
 
 interface Tracer {
@@ -48,10 +47,9 @@ interface Tracer {
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements AfterViewInit, OnInit  {
-  
-  isLoading: Observable<boolean>;
 
   constructor(private _snackBar: MatSnackBar, private httpClient: HttpClient, private replserviceService: ReplserviceService) {}
+  
   openSnackBar(message: string, action: string) {
     this._snackBar.open(message, action, {
       duration: 2000,
@@ -63,6 +61,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     console.log(this.headerTest);
   }
 
+  public treeRegion = 0;
   myControl = new FormControl();
   options: string[] = ['turnOnGEOJson', 'turnOffGEOJson', 'savePolygons', 'retrievePolygons', 'loadPolygons'];
   filteredOptions: Observable<string[]>;
@@ -74,7 +73,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
         map(value => this._filter(value))
       );
 
-      $(function () {
+      $( () => {
         // 6 create an instance when the DOM is ready
         function nodeExpand(node){
           if (node.children.length === 0)
@@ -90,15 +89,17 @@ export class AppComponent implements AfterViewInit, OnInit  {
           $('#atlas_info').jstree('search', searchString);
         });
       
-        $.getJSON('https://raw.githubusercontent.com/Sai-Adarsh/viewer-geojson/main/h.json',function(jsonresponse) {
+        $.getJSON('https://raw.githubusercontent.com/Sai-Adarsh/viewer-geojson/main/h.json', (jsonresponse) => {
           var dataNode=nodeExpand(jsonresponse.msg[0]);
           $('#atlas_info')
-          .on("changed.jstree", function (e, data) {
+          .on("changed.jstree",  (e, data) => {
             if(data.selected.length) {
               //alert('The selected node is: ' + data.instance.get_node(data.selected[0]).text);
               //console.log(data.selected);
-  
+              this.treeRegion = data.selected[0];
+              console.log(this.treeRegion);
               console.log('The selected node is: ' + data.selected[0]);//data.instance.get_node(data.selected[0]).text);
+              this.displayFeatures()
               // if(data.selected.length == 1)
               //   drawAtlasRegion(data.selected);
               // else{
@@ -108,14 +109,14 @@ export class AppComponent implements AfterViewInit, OnInit  {
             }
           })
           .jstree({ 
-            "plugins" : [ "search"],
+            "plugins" : ["search"],
             'core' : {
               'themes': {
                 'name': 'proton',
+                'responsive': true,
                 'icons': false,
                 'variant': 'large',
                 'dots': true,
-                'responsive': true
               },
               'multiple': false,
               // 'check_callback': true,
@@ -138,7 +139,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     const filterValue = value.toLowerCase();
     return this.options.filter(option => option.toLowerCase().includes(filterValue));
   }
-  public progress;
+
   public switchLayer;
   public showFiller2;
   public showFillerREPL;
@@ -168,7 +169,10 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public secNo;
   public brainID;
   public PMDID;
-
+  public lastRegionID = -1;
+  public featureStack = [];
+  public lastol_uid=0;
+  public last_size = 0;
   /** OL-Map. */
   map: Map;
   /** Basic layer. */
@@ -191,13 +195,23 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public addPolygon : Draw;
   public erasePolygon : Draw;
   public headerTest: String = "Home";
-  selectedValue: string;
-  selectedCar: string;
+  public selectedValue: string = 'nissl';
+  public selectedCar: string;
+  public individualRegion;
 
   tracers: Tracer[] = [
     {value: 'fluro', viewValue: 'Fluro'},
     {value: 'nissl', viewValue: 'Nissl'}
   ];
+
+  //json format
+  public saveJson = {
+    "firstpassAtlas":{},
+    "userActions":[],
+    "outputCombine":{}
+  };
+
+
   /**
    * Initialise the map.
    */
@@ -218,7 +232,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     if (!firebase.apps.length) {
         firebase.initializeApp(this.firebaseConfig);
     }
-    this.progress='determinate';
+
     this.defaultGeoJSONSecNo = 60;
     this.secNo = 60;
     this.brainID = 4958
@@ -335,7 +349,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
     this.zoomifySource = new Zoomify({
       url: this.defaultURL,
-      size: [24000, 18000],
+      size: [24000, 24000],
       crossOrigin: 'anonymous',
       zDirection: -1, // Ensure we get a tile with the screen resolution or higher
     });
@@ -361,6 +375,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.HueString = 0
     this.SaturationString = 100;
     this.invertValue = "";
+    this.individualRegion = 'http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/PMD2495/0060/';
 
     this.map = new Map({
       target: 'map',
@@ -379,31 +394,76 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.addPolygon.setActive(false);
     this.erasePolygon.setActive(false);
   
-    this.vector.on("postrender",(event)=>{
+    this.vector.on("prerender",(event)=>{
       this.setPolyStyle();
     });
 
-    this.addPolygon.on("drawstart",(event)=>{
+    /*this.addPolygon.on("drawstart",(event)=>{
       this.setPolyStyle();
     });
     this.addPolygon.on("drawend",(event)=>{
       this.setPolyStyle();
 
-    });
+    });*/
 
   }
 
   setPolyStyle(){
-    var vector_sr = this.vector.getSource();
-    var features = vector_sr.getFeatures();
-    if(features.length>0 &&this.erasePolygon.getActive() == true && features[features.length - 1].getStyle() == null){
-            features[features.length -1].setStyle(this.styleErase);
-            features[features.length -1].set("name","erase");
-    }
-    else if(features.length>0 && this.addPolygon.getActive() == true && features[features.length - 1].getStyle() == null){
-            features[features.length -1].setStyle(this.styleAdd);
-            features[features.length -1].set("name","add");
-    }
+        var vector_sr = this.vector.getSource();
+        var features = vector_sr.getFeatures();
+
+        var bugFeature = new Feature;
+        if(parseInt(features[features.length-1].ol_uid)> this.lastol_uid == true)
+        { 
+            if(this.erasePolygon.getActive() == true && features[features.length - 1].getStyle() == null ){ //check if style is already set
+                  features[features.length -1].setStyle(this.styleErase);
+                  features[features.length -1].set("name","erase");
+                  this.featureStack.push(features[features.length -1]);
+                  var format = new GeoJSON();
+                  var temp = {"action":"Erase","geoJson":JSON.parse(format.writeFeatures([features[features.length -1]]))}
+                  this.saveJson["userActions"].push(temp);   
+                  this.lastol_uid = parseInt(features[features.length -1].ol_uid);
+                  this.last_size = this.last_size+1;    
+            }
+            else if(this.addPolygon.getActive() == true && features[features.length - 1].getStyle() == null){//check if style is already set
+                  features[features.length -1].setStyle(this.styleAdd);
+                  features[features.length -1].set("name","add");
+                  this.featureStack.push(features[features.length -1]);
+                  var format = new GeoJSON();
+                  var temp = {"action":"Add","geoJson":JSON.parse(format.writeFeatures([features[features.length -1]]))}
+                  this.saveJson["userActions"].push(temp);
+                  this.lastol_uid = parseInt(features[features.length -1].ol_uid);
+                  this.last_size = this.last_size+1;     
+            }
+        }
+        else if(features.length > this.last_size){ // the feature in vector source are not ordered due to last feature added to vector.
+            
+            var flag = 0;
+            for(var i =0;i<features.length;i++){
+              if(parseInt(features[i].ol_uid)>this.lastol_uid){//get the feature which caused disorder in vector source
+                    bugFeature = features[i];
+                    flag = 1;
+                    vector_sr.removeFeature(vector_sr.getFeatureByUid(features[i].ol_uid));      
+              } 
+            }
+            if(flag == 1){
+              if(this.addPolygon.getActive() == true){
+                bugFeature.setStyle(this.styleAdd);
+                bugFeature.set("name","add");
+              }
+              else{
+                bugFeature.setStyle(this.styleErase);
+                bugFeature.set("name","erase");
+              }
+              vector_sr.addFeature(bugFeature);
+              this.featureStack.push(bugFeature);
+              var temp = {"action":"Erase","geoJson":JSON.parse(format.writeFeatures([bugFeature]))}
+              this.saveJson["userActions"].push(temp);
+              this.last_size = this.last_size+1;
+              this.lastol_uid = parseInt(bugFeature.ol_uid);
+            }
+          
+        }
   }
 
   resetToDefault = () => {
@@ -429,7 +489,73 @@ export class AppComponent implements AfterViewInit, OnInit  {
         "coordinates": coordinates,
       },
     };*/
-    console.log("save works", geojsonStr);
+
+    var outObj_atlas = { 
+      imagename: this.brainID,
+      series_id: "" + this.PMDID,
+      section_id: ""+ this.secNo,
+      section: "" + this.secNo,
+    };
+    //outObj_atlas.atlas = JSON.stringify(app.atlas);
+    var apifunName = '/saveatlas_status_wp/';
+    console.log("save works", geojsonStr, outObj_atlas);
+    /*$(function () {
+      // 6 create an instance when the DOM is ready
+      function nodeExpand(node){
+        if (node.children.length === 0)
+          return {text:node.name,...node};
+        else 
+          for(var i=0;i<node.children.length;i++){
+            node.children[i] = nodeExpand(node.children[i]);
+          }
+          return {text:node.name,...node};
+      }
+      $(".search-input").keyup(function () {
+        var searchString = $(this).val();
+        $('#atlas_info').jstree('search', searchString);
+      });
+    
+      $.getJSON('https://raw.githubusercontent.com/Sai-Adarsh/viewer-geojson/main/h.json',function(jsonresponse) {
+        var dataNode=nodeExpand(jsonresponse.msg[0]);
+        $('#atlas_info')
+        .on("changed.jstree", function (e, data) {
+          if(data.selected.length) {
+            //alert('The selected node is: ' + data.instance.get_node(data.selected[0]).text);
+            //console.log(data.selected);
+
+            console.log('The selected node is: ' + data.selected[0]);//data.instance.get_node(data.selected[0]).text);
+            // if(data.selected.length == 1)
+            //   drawAtlasRegion(data.selected);
+            // else{
+            //   failMessage('<h5>Please select only one</h5>');
+            //   return;
+            // }
+          }
+        })
+        .jstree({ 
+          "plugins" : ["search"],
+          'core' : {
+            'themes': {
+              'name': 'proton',
+              'responsive': true,
+              'icons': false,
+              'variant': 'large',
+              'dots': true,
+            },
+            'multiple': false,
+            // 'check_callback': true,
+            'data' :function(node,cb){
+                  if(node.id === '#'){
+                    cb({...dataNode},dataNode.children);
+                    }
+                }
+          },
+          "search": {
+            "case_insensitive": true,
+            "show_only_matches" : true
+          }});
+      })
+    });*/
     const db = firebase.database().ref().child("vector").push(geojsonStr);
   }
 
@@ -441,6 +567,8 @@ export class AppComponent implements AfterViewInit, OnInit  {
         items.push(child.val());
       });
       this.loadedFeature = items[items.length - 1];
+    }).then( () => {
+      this.loadPolygonsFromFirebase()
     });
   }
 
@@ -499,17 +627,17 @@ export class AppComponent implements AfterViewInit, OnInit  {
               color: 'rgba(255, 255, 255, 0)'
           }),
           stroke: new Stroke({
-              color: 'white', //'#2F7B63',
-              width: 0.5
+              color: '#0c0c0c', //'#2F7B63',
+              width: 2
             }),
               text: new Text({
                   font: '12px Calibri,sans-serif',
                   fill: new Fill({
-                      color: 'white'
+                      color: '#000'
                   }),
                   stroke: new Stroke({
-                      color: 'white',
-                      width: 0.5
+                      color: '#fff',
+                      width: 3
                   })
               })
         });
@@ -531,6 +659,59 @@ export class AppComponent implements AfterViewInit, OnInit  {
     }
   }
 
+  displayFeatures() {
+    var defaultStyle = new Style({
+      fill: new Fill({
+        color: 'transparent'
+      }),
+      stroke: new Stroke({
+        color: '#000', //'#2F7B63',
+        width: 2
+      }),
+      text: new Text({
+          font: '12px Calibri,sans-serif',
+          fill: new Fill({
+              color: '#000'
+          }),
+          stroke: new Stroke({
+              color: '#fff',
+              width: 3
+          })
+      })
+    });
+
+    if (this.lastRegionID != -1) {
+      this.modifyVector.getSource().getFeatureById(this.lastRegionID).setStyle(defaultStyle);
+    }
+
+    var atlasstyle = new Style({
+      fill: new Fill({
+          color: 'rgba(255, 255, 255, 0.4)'
+      }),
+      stroke: new Stroke({
+          color: '#2F7B63', //'#2F7B63',
+          width: 3
+        }),
+          text: new Text({
+              font: '12px Calibri,sans-serif',
+              fill: new Fill({
+                  color: '#FF0000'
+              }),
+              stroke: new Stroke({
+                  color: '#fff',
+                  width: 3
+              })
+          })
+    });
+    console.log(this.modifyVector);
+    this.modifyVector.getSource().getFeatureById(this.treeRegion).setStyle(atlasstyle);
+    //this.modifyVector.getSource().addFeature(newGeoJson[newGeoJson.length - 1]);
+    //this.modifyVector.getSource().getFeatureById(this.treeRegion).setStyle(atlasstyle);
+    //newGeoJson[newGeoJson.length - 1].setStyle(atlasstyle);
+    this.lastRegionID = this.treeRegion;
+    console.log(this.treeRegion, this.individualRegion);
+  }
+
   addPolygons(){
     this.draw.setActive(false);
     this.erasePolygon.setActive(false);
@@ -548,7 +729,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
   combine(){
     var vector_sr = this.vector.getSource();
-    var features = vector_sr.getFeatures();
+    var features = this.featureStack;
     var format = new GeoJSON();
     var turfpoly;
     var polygon;
@@ -592,7 +773,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
                   var poly1 = turf.getCoords(last);
                   var poly2 = turf.getCoords(turfpoly);
                   var polyDiff;
-                  polyDiff = polygonClipping.difference(poly1,poly2);
+                  polyDiff = polygonClipping.difference(poly1, poly2);
                   polyDiff = turf.multiPolygon(polyDiff);
                   polygon = polyDiff;
                 //} 
@@ -607,12 +788,16 @@ export class AppComponent implements AfterViewInit, OnInit  {
         }
     }
     if(count>0 && polygon!=null){  
-        polygon = format.readFeatures(polygon)[0]
+        polygon = format.readFeatures(polygon)[0];
         polygon.setStyle(sty);
+        this.lastol_uid = parseInt(polygon.ol_uid);
+        this.last_size = 1;
+        this.featureStack = [polygon];
         vector_sr.addFeature(polygon);
     }
     //console.log(vector_sr.getFeatures());
-    this.vector.setSource(vector_sr); 
+    this.vector.setSource(vector_sr);
+    this.saveJson["outputCombine"] = JSON.parse(format.writeFeatures(features));
   }
 
   addInteraction(interactionType) {
@@ -657,6 +842,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     }
     
   }
+
   getBrainIDUpdated(event) {
     this.brainID = parseInt(event.target.value);    
     console.log("brainid", this.brainID);
@@ -670,7 +856,6 @@ export class AppComponent implements AfterViewInit, OnInit  {
   }
 
   brainIDUpdated() {
-    this.progress='indeterminate';
     this.modifyVector.setVisible(false);
     console.log(this.brainID, this.secNo);
     this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/' + this.brainID + '/').subscribe(res=>{
@@ -680,7 +865,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
       var newURL = "http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=" + this.urlData.F[this.secNo][1].split('/brainimg')[1].replace("&","%26").replace("jpg","jp2") + "&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}";
       this.zoomifySource = new Zoomify({
         url: newURL,
-        size: [24000, 24000],
+        size: [24000, 18000],
         crossOrigin: 'anonymous',
         zDirection: -1, // Ensure we get a tile with the screen resolution or higher
       });
@@ -708,8 +893,8 @@ export class AppComponent implements AfterViewInit, OnInit  {
               color: 'rgba(255, 255, 255, 0)'
           }),
           stroke: new Stroke({
-              color: 'white', //'#2F7B63',
-              width: 0.5
+              color: '#0c0c0c', //'#2F7B63',
+              width: 2
             }),
               text: new Text({
                   font: '12px Calibri,sans-serif',
@@ -717,12 +902,12 @@ export class AppComponent implements AfterViewInit, OnInit  {
                       color: '#000'
                   }),
                   stroke: new Stroke({
-                      color: 'white',
-                      width: 0.5
+                      color: '#fff',
+                      width: 3
                   })
               })
         });
-        console.log(this.defaultGeoJSONSecNo);
+        console.log("check geojson", this.defaultGeoJSONSecNo, res);
         res = JSON.stringify(res);
         var reader = new GeoJSON();
         const newGeoJson = reader.readFeatures(res);
@@ -735,7 +920,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
       });
       this.modifyVector.setVisible(true);
     }
-    this.progress='determinate';
+
   }
 
 
@@ -760,7 +945,6 @@ export class AppComponent implements AfterViewInit, OnInit  {
         });
         this.defaultURL = newURL;
         this.imagery.setSource(this.zoomifySource);
-        //this.progress=null;
         console.log(this.defaultURL);
       });
       console.log(this.defaultURL, this.urlData);
@@ -778,7 +962,6 @@ export class AppComponent implements AfterViewInit, OnInit  {
         });
         this.defaultURL = newURL;
         this.imagery.setSource(this.zoomifySource);
-        //this.progress=null;
         console.log(this.defaultURL);
       });
     }
@@ -820,6 +1003,85 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
   PrintTree() {
     console.log("Print Tree", typeof this.treeString[0]["msg"], this.treeString[0]["msg"]);
+  }
+
+  handleFileLoad(event){
+    var vector_sr = this.vector.getSource();
+    var features = vector_sr.getFeatures();
+    
+    var content = JSON.parse(event.target.result);
+    var format = new GeoJSON();
+    if(content["outputCombine"]["type"]!= undefined || content["outputCombine"].length!=undefined ){
+        var featuresToLoad = format.readFeatures(content["outputCombine"]);
+        console.log(featuresToLoad);
+        for(var i=0;i<featuresToLoad.length;i++){
+            if(featuresToLoad[i].get("name")=="add"){
+                featuresToLoad[i].setStyle(this.styleAdd);
+            }
+            else if(featuresToLoad[i].get("name")=="erase"){
+                featuresToLoad[i].setStyle(this.styleErase);
+            }
+            vector_sr.addFeature(featuresToLoad[i]);
+        }
+      this.saveJson["firstpassAtlas"] =  content["outputCombine"]; 
+    }
+  }
+
+  importFile(event) {
+    if (event.target.files.length == 0) {
+       console.log("No file selected!");
+       return
+    }
+    var file: File = event.target.files[0];
+    
+    const reader = new FileReader();
+    reader.readAsText(event.target.files[0]);
+    reader.onload = (event) => {
+      var vector_sr = this.vector.getSource();
+      var features = vector_sr.getFeatures();
+      console.log("here", event.target.result)
+      var fileString = event.target.result;
+      var content = JSON.parse(JSON.parse(JSON.stringify(fileString)));
+      var format = new GeoJSON();
+      if(content["outputCombine"]["type"]!= undefined || content["outputCombine"].length!=undefined ){
+          var featuresToLoad = format.readFeatures(content["outputCombine"]);
+          console.log(featuresToLoad);
+          for(var i=0;i<featuresToLoad.length;i++){
+              if(featuresToLoad[i].get("name")=="add"){
+                  featuresToLoad[i].setStyle(this.styleAdd);
+              }
+              else if(featuresToLoad[i].get("name")=="erase"){
+                  featuresToLoad[i].setStyle(this.styleErase);
+              }
+              vector_sr.addFeature(featuresToLoad[i]);
+          }
+        this.saveJson["firstpassAtlas"] =  content["outputCombine"]; 
+      }
+    };
+
+  
+      // after here 'file' can be accessed and used for further process
+  }
+
+  setCheckPoint() {
+    this.saveJson["userActions"] = [];
+    this.saveJson["firstpassAtlas"] = this.saveJson["outputCombine"]
+    this.saveJson["outputCombine"] = {};
+  }
+
+  exportFile(event) {
+      console.log("Saving File");
+      this.combine();
+      var json = this.saveJson;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(json, null, 2)], {
+        type: "text/plain"
+      }));
+      a.setAttribute("download", "feature.json");
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      this.setCheckPoint();  
   }
 
 }
