@@ -110,5 +110,8 @@
 }
 
 .mat-expansion-panel.mat-expanded {
-  background:#616161;
+  background:#2e2c2c;
+}
+.example-full-width {
+  width: 100%;
 }

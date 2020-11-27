@@ -200,10 +200,9 @@
                   </mat-slide-toggle>
                 -->          
                 <mat-card-actions>
-                  <button (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>
-                </mat-card-actions><p> </p>
-                <br>
-              </mat-expansion-panel><p></p>
+                  <button style="right:-60%;padding:8px;width:40%;" (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>
+                </mat-card-actions>
+              </mat-expansion-panel>
               <mat-expansion-panel #panel2 (opened)="panelOpenState = true; this.changeHeaderTest('Atlas');"
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
@@ -217,8 +216,8 @@
                   </button><p> </p>
                 -->
                 <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); margin-left: 10px;">
-                  <div class="active-pink-3 active-pink-4 mb-4">
-                      <mat-form-field appearance="outline">
+                  <div class="active-pink-3 active-pink-4 mb-4">                    
+                      <mat-form-field class="example-full-width" appearance="fill" >
                         <mat-label>Region Name</mat-label>
                         <input class="form-control search-input" (change)="this.Tree($event);" matInput placeholder="E.g. Hypothalamus">
                       </mat-form-field>
