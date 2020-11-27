@@ -50,7 +50,7 @@ import {MatSelectModule} from '@angular/material/select';
     MatChipsModule,
     MatSelectModule
   ],
-  providers: [AppComponent],
+  providers: [AppComponent, ReplserviceService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
