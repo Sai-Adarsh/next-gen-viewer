@@ -198,9 +198,13 @@
                       [disabled]="disabled">
                     Toggle Tracer
                   </mat-slide-toggle>
-                -->          
+                -->  
+             
                 <mat-card-actions>
                   <button style="right:-60%;padding:8px;width:40%;" (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>
+                  <!-- <div class="progress" *ngIf="progress">
+                    <div class="progress-bar" [style.width]="progress">{{progress}}%</div>
+                  </div> -->
                 </mat-card-actions>
               </mat-expansion-panel>
               <mat-expansion-panel #panel2 (opened)="panelOpenState = true; this.changeHeaderTest('Atlas');"
@@ -217,7 +221,7 @@
                 -->
                 <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); margin-left: 10px;">
                   <div class="active-pink-3 active-pink-4 mb-4">                    
-                      <mat-form-field class="example-full-width" appearance="fill" >
+                      <mat-form-field style="width:100%" appearance="fill" >
                         <mat-label>Region Name</mat-label>
                         <input class="form-control search-input" (change)="this.Tree($event);" matInput placeholder="E.g. Hypothalamus">
                       </mat-form-field>
@@ -353,6 +357,7 @@
               <mat-chip-list aria-label="Fish selection">
                 <mat-chip>{{ this.headerTest }}</mat-chip>
               </mat-chip-list>
+             
               <!--<button (click)="this.deleteDrawing()" mat-raised-button>
                 <mat-icon>undo</mat-icon>
               </button>&nbsp;
@@ -368,7 +373,7 @@
               <mat-icon>share</mat-icon>
               </button>
 					</mat-toolbar>
-
+          <mat-progress-bar mode="{{this.progress}}"></mat-progress-bar>
           <div class="example-sidenav-content">
             <div id="map" class="map"></div>
           </div> 
