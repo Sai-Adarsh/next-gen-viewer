@@ -22,6 +22,7 @@ import { ReplserviceService } from './replservice.service';
 import { MatTreeModule } from '@angular/material/tree';
 import {MatChipsModule} from '@angular/material/chips';
 import {MatSelectModule} from '@angular/material/select';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
 
 @NgModule({
   declarations: [
@@ -29,6 +30,7 @@ import {MatSelectModule} from '@angular/material/select';
   ],
   imports: [
     BrowserModule,
+    MatProgressBarModule,
     BrowserAnimationsModule,
     MatButtonModule,
     MatSidenavModule,

@@ -172,7 +172,7 @@
                 </mat-expansion-panel-header>
                 <br>
                 <mat-form-field appearance="outline">
-                  <mat-label>Series ID</mat-label>
+                  <mat-label>Brain ID</mat-label>
                   <input (change)="this.getBrainIDUpdated($event)"matInput placeholder="E.g. 4240">
                 </mat-form-field>
                 <mat-form-field appearance="outline">
@@ -201,12 +201,9 @@
                 -->  
              
                 <mat-card-actions>
-                  <button style="right:-60%;padding:8px;width:40%;" (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>
-                  <!-- <div class="progress" *ngIf="progress">
-                    <div class="progress-bar" [style.width]="progress">{{progress}}%</div>
-                  </div> -->
+                  <button style="right:-60%;padding:8px;width:40%;" (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>                
                 </mat-card-actions>
-              </mat-expansion-panel>
+              </mat-expansion-panel><br>
               <mat-expansion-panel #panel2 (opened)="panelOpenState = true; this.changeHeaderTest('Atlas');"
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
@@ -219,6 +216,11 @@
                     <mat-icon>cloud_download</mat-icon>
                   </button><p> </p>
                 -->
+                
+                <button  color="primary" (click)="this.onClick('show')" mat-raised-button >Show atlas</button>
+                <button  color="primary" (click)="this.onClick('hide')" style="left:10%;" mat-raised-button>Hide atlas</button>
+              <br><br>
+
                 <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); margin-left: 10px;">
                   <div class="active-pink-3 active-pink-4 mb-4">                    
                       <mat-form-field style="width:100%" appearance="fill" >
@@ -324,24 +326,22 @@
 
                   <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Development Tool | Layers');"
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Development Tool');">
-                <mat-expansion-panel-header>
+                <!-- <mat-expansion-panel-header>
                   <mat-panel-title>
                     Layers
                   </mat-panel-title>
-                </mat-expansion-panel-header>
-                <mat-slide-toggle
+                </mat-expansion-panel-header> -->
+                <!-- <mat-slide-toggle
                     color="primary"
                     (change)="this.onToggle($event)"
                     class="example-margin"
                     [checked]="checked"
                     [disabled]="disabled">
                   GeoJSON
-                </mat-slide-toggle><p> </p>
+                </mat-slide-toggle><p> </p> -->
               </mat-expansion-panel><p></p>
                 </mat-accordion>
               </mat-expansion-panel><p> </p>
-
-
               
             </mat-accordion><p> </p>
 
@@ -373,7 +373,7 @@
               <mat-icon>share</mat-icon>
               </button>
 					</mat-toolbar>
-          <mat-progress-bar mode="{{this.progress}}"></mat-progress-bar>
+          <mat-progress-bar mode="determinate" [value]="progress" *ngIf="progress > 0" ng-hide="progress=100" class="progress-striped active" color="warn"></mat-progress-bar>
           <div class="example-sidenav-content">
             <div id="map" class="map"></div>
           </div> 

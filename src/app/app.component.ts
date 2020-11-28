@@ -34,6 +34,7 @@ import Polygon from 'ol/geom/Polygon';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ReplserviceService } from './replservice.service';
 import * as polygonClipping from 'polygon-clipping';
+import { HIGH_CONTRAST_MODE_ACTIVE_CSS_CLASS } from '@angular/cdk/a11y/high-contrast-mode/high-contrast-mode-detector';
 declare var $: any;
 
 interface Tracer {
@@ -139,7 +140,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     const filterValue = value.toLowerCase();
     return this.options.filter(option => option.toLowerCase().includes(filterValue));
   }
-
+  public progress=0;
   public switchLayer;
   public showFiller2;
   public showFillerREPL;
@@ -232,7 +233,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     if (!firebase.apps.length) {
         firebase.initializeApp(this.firebaseConfig);
     }
-
+    this.progress=0;
     this.defaultGeoJSONSecNo = 60;
     this.secNo = 60;
     this.brainID = 4958
@@ -617,27 +618,29 @@ export class AppComponent implements AfterViewInit, OnInit  {
     });
   };
 
-  onToggle(event) {
+  onClick(event) {
+    // var a=document.getElementById("showat").onclick;
+    // var b=document.getElementById("hideat").onclick;
     this.modifyVector.getSource().clear();
-    if (event.checked == true) {
-      this.lastChecked = true;
+      if (event=='show') {
+      //this.lastChecked = true;
       this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/' + this.PMDID + '/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
         var atlasstyle = new Style({
           fill: new Fill({
               color: 'rgba(255, 255, 255, 0)'
           }),
           stroke: new Stroke({
-              color: '#0c0c0c', //'#2F7B63',
-              width: 2
+              color: 'white', //'#2F7B63',
+              width: 0.5
             }),
               text: new Text({
                   font: '12px Calibri,sans-serif',
                   fill: new Fill({
-                      color: '#000'
+                      color: 'white'
                   }),
                   stroke: new Stroke({
-                      color: '#fff',
-                      width: 3
+                      color: 'white',
+                      width: 0.5
                   })
               })
         });
@@ -654,8 +657,8 @@ export class AppComponent implements AfterViewInit, OnInit  {
       this.modifyVector.setVisible(true);
     }
     else {
-      this.lastChecked = false;
-      this.modifyVector.setVisible(false);
+      //this.lastChecked = false;
+     this.modifyVector.setVisible(false);
     }
   }
 
@@ -689,17 +692,17 @@ export class AppComponent implements AfterViewInit, OnInit  {
           color: 'rgba(255, 255, 255, 0.4)'
       }),
       stroke: new Stroke({
-          color: '#2F7B63', //'#2F7B63',
-          width: 3
+          color: 'white', //'#2F7B63',
+          width: 0.5
         }),
           text: new Text({
               font: '12px Calibri,sans-serif',
               fill: new Fill({
-                  color: '#FF0000'
+                  color: 'white'
               }),
               stroke: new Stroke({
-                  color: '#fff',
-                  width: 3
+                  color: 'white',
+                  width: 0.5
               })
           })
     });
@@ -856,6 +859,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
   }
 
   brainIDUpdated() {
+    this.progress=10;
     this.modifyVector.setVisible(false);
     console.log(this.brainID, this.secNo);
     this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/' + this.brainID + '/').subscribe(res=>{
@@ -871,6 +875,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
       });
       this.defaultURL = newURL;
       this.imagery.setSource(this.zoomifySource);
+      this.progress=50;
       console.log(this.defaultURL);
       if (this.selectedValue == 'nissl') {
         var event = {
@@ -884,8 +889,9 @@ export class AppComponent implements AfterViewInit, OnInit  {
         };
         this.onToggleTracer(event);
       }
+      this.progress=100;
     });
-    console.log(this.lastChecked, this.defaultGeoJSONSecNo);
+    console.log(this.lastChecked, this.defaultGeoJSONSecNo); 
     if (this.lastChecked == true) {
       this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/' + this.PMDID + '/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
         var atlasstyle = new Style({
@@ -893,20 +899,21 @@ export class AppComponent implements AfterViewInit, OnInit  {
               color: 'rgba(255, 255, 255, 0)'
           }),
           stroke: new Stroke({
-              color: '#0c0c0c', //'#2F7B63',
-              width: 2
+              color: 'white', //'#2F7B63',
+              width: 0.5
             }),
               text: new Text({
                   font: '12px Calibri,sans-serif',
                   fill: new Fill({
-                      color: '#000'
+                      color: 'white'
                   }),
                   stroke: new Stroke({
-                      color: '#fff',
-                      width: 3
+                      color: 'white',
+                      width: 0.5
                   })
               })
         });
+        
         console.log("check geojson", this.defaultGeoJSONSecNo, res);
         res = JSON.stringify(res);
         var reader = new GeoJSON();
@@ -918,9 +925,11 @@ export class AppComponent implements AfterViewInit, OnInit  {
           this.modifyVector.getSource().addFeature(newGeoJson[i]);
         }
       });
+      this.progress=100;
       this.modifyVector.setVisible(true);
     }
-
+    if(this.progress==100)
+    this.progress=0;
   }
 
 
@@ -929,6 +938,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
       this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/' + this.brainID + '/').subscribe(res=>{
         this.urlData = res;
         console.log(res);
+
         var toggleSecNo;
         if (this.secNo - 4 < 0) {
           toggleSecNo = 0;
@@ -975,7 +985,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
         checked: true,
       };
       this.lastChecked = true;
-      this.onToggle(event);
+     // this.onToggle(event);
     };
     if (this.myControl.value == "turnOffGEOJson") {
       this.lastChecked = false;
