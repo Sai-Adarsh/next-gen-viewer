@@ -73,7 +73,7 @@
           <button (mouseenter) ="this.changeHeaderTest('LineString');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('LineString')" mat-raised-button>
             <mat-icon>clear_all</mat-icon>
           </button><p> </p>
-          <button (mouseenter) ="this.changeHeaderTest('Polygon');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Polygon')" mat-raised-button>
+          <button (mouseenter) ="this.changeHeaderTest('Polygon');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addpixelpolyfun()" mat-raised-button>
             <mat-icon>change_history</mat-icon>
           </button><p> </p>
           <button (mouseenter) ="this.changeHeaderTest('Circle');"  (mouseleave) ="this.changeHeaderTest('Annotation Tools');" (click)="this.addInteraction('Circle')" mat-raised-button>
@@ -112,10 +112,10 @@
               <mat-icon> cloud</mat-icon>
             </mat-panel-title>
             </mat-expansion-panel-header>
-              <button (mouseenter) ="this.changeHeaderTest('Save Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToFirebase()" mat-raised-button>
+              <button (mouseenter) ="this.changeHeaderTest('Save Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');"  (click)="openSnackBar('Saving Polygons to firebase', 'Dismiss'); savePolygonsToDatabase()" mat-raised-button>
                 <mat-icon>cloud_import</mat-icon>
               </button><p> </p>
-              <button (mouseenter) ="this.changeHeaderTest('Retrieve Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="retrievePolygonsFromFirebase(); openSnackBar('Retrieving Polygons to firebase', 'Dismiss')" mat-raised-button>
+              <button (mouseenter) ="this.changeHeaderTest('Retrieve Polygon');"  (mouseleave) ="this.changeHeaderTest('Save & Load');" (click)="retrievePolygonsFromDatabase(); openSnackBar('Retrieving Polygons to Database', 'Dismiss')" mat-raised-button>
                 <mat-icon>cloud_download</mat-icon>
               </button><p> </p>
               <!--
@@ -198,12 +198,11 @@
                       [disabled]="disabled">
                     Toggle Tracer
                   </mat-slide-toggle>
-                -->  
-             
+                -->          
                 <mat-card-actions>
-                  <button style="right:-60%;padding:8px;width:40%;" (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>                
+                  <button style="right:-60%;padding:8px;width:40%;"  (click)="this.brainIDUpdated()" color="primary" mat-raised-button>Load Brain</button>
                 </mat-card-actions>
-              </mat-expansion-panel><br>
+              </mat-expansion-panel><p></p>
               <mat-expansion-panel #panel2 (opened)="panelOpenState = true; this.changeHeaderTest('Atlas');"
                                    (closed)="panelOpenState = false; this.changeHeaderTest('Home');">
                 <mat-expansion-panel-header>
@@ -216,14 +215,12 @@
                     <mat-icon>cloud_download</mat-icon>
                   </button><p> </p>
                 -->
-                
-                <button  color="primary" (click)="this.onClick('show')" mat-raised-button >Show atlas</button>
-                <button  color="primary" (click)="this.onClick('hide')" style="left:10%;" mat-raised-button>Hide atlas</button>
-              <br><br>
-
                 <div class="menu-overflow-hidden" id="jstree_block" style="height: calc(50% - 2px); margin-left: 10px;">
-                  <div class="active-pink-3 active-pink-4 mb-4">                    
-                      <mat-form-field style="width:100%" appearance="fill" >
+                  <div class="active-pink-3 active-pink-4 mb-4">
+                    <button  color="primary" (click)="this.onClick('show')" mat-raised-button >Show atlas</button>
+                    <button  color="primary" (click)="this.onClick('hide')" style="left:10%;" mat-raised-button>Hide atlas</button>
+                  <br><br>
+                      <mat-form-field style="width:100%" appearance="fill">
                         <mat-label>Region Name</mat-label>
                         <input class="form-control search-input" (change)="this.Tree($event);" matInput placeholder="E.g. Hypothalamus">
                       </mat-form-field>
@@ -324,24 +321,11 @@
                       max="100"></mat-slider><p> </p>
                   </mat-expansion-panel><p> </p>
 
-                  <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Development Tool | Layers');"
-                                   (closed)="panelOpenState = false; this.changeHeaderTest('Development Tool');">
-                <!-- <mat-expansion-panel-header>
-                  <mat-panel-title>
-                    Layers
-                  </mat-panel-title>
-                </mat-expansion-panel-header> -->
-                <!-- <mat-slide-toggle
-                    color="primary"
-                    (change)="this.onToggle($event)"
-                    class="example-margin"
-                    [checked]="checked"
-                    [disabled]="disabled">
-                  GeoJSON
-                </mat-slide-toggle><p> </p> -->
-              </mat-expansion-panel><p></p>
+                  
                 </mat-accordion>
               </mat-expansion-panel><p> </p>
+
+
               
             </mat-accordion><p> </p>
 
@@ -357,7 +341,6 @@
               <mat-chip-list aria-label="Fish selection">
                 <mat-chip>{{ this.headerTest }}</mat-chip>
               </mat-chip-list>
-             
               <!--<button (click)="this.deleteDrawing()" mat-raised-button>
                 <mat-icon>undo</mat-icon>
               </button>&nbsp;
@@ -372,8 +355,9 @@
               <button mat-icon-button class="example-icon" aria-label="Example icon-button with share icon">
               <mat-icon>share</mat-icon>
               </button>
-					</mat-toolbar>
-          <mat-progress-bar mode="determinate" [value]="progress" *ngIf="progress > 0" ng-hide="progress=100" class="progress-striped active" color="warn"></mat-progress-bar>
+          </mat-toolbar>
+          <mat-progress-bar mode="determinate" [value]="progress" *ngIf="progress > 0" ng-hide="progress==100" class="progress-striped active" color="warn"></mat-progress-bar>
+  <!--<mat-progress-bar mode="{{this.progress}}"></mat-progress-bar>-->
           <div class="example-sidenav-content">
             <div id="map" class="map"></div>
           </div> 

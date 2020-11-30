@@ -34,7 +34,6 @@ import Polygon from 'ol/geom/Polygon';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ReplserviceService } from './replservice.service';
 import * as polygonClipping from 'polygon-clipping';
-import { HIGH_CONTRAST_MODE_ACTIVE_CSS_CLASS } from '@angular/cdk/a11y/high-contrast-mode/high-contrast-mode-detector';
 declare var $: any;
 
 interface Tracer {
@@ -60,6 +59,12 @@ export class AppComponent implements AfterViewInit, OnInit  {
   changeHeaderTest(message: String) {
     this.headerTest = message;
     console.log(this.headerTest);
+    if(message=="Injection Region"){
+      this.category="Injection";
+    }
+    if(message=="Atlas"){
+      this.category="Atlas";
+    }
   }
 
   public treeRegion = 0;
@@ -140,7 +145,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     const filterValue = value.toLowerCase();
     return this.options.filter(option => option.toLowerCase().includes(filterValue));
   }
-  public progress=0;
+
   public switchLayer;
   public showFiller2;
   public showFillerREPL;
@@ -168,12 +173,15 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public treeString;
   public urlData;
   public secNo;
-  public brainID;
-  public PMDID;
+  public brainID; // series id
+  public brainIdPm; // brain id
+  public PMDID; //brainid from url
   public lastRegionID = -1;
   public featureStack = [];
   public lastol_uid=0;
   public last_size = 0;
+  public addpixel = true;
+  public category = null;
   /** OL-Map. */
   map: Map;
   /** Basic layer. */
@@ -195,10 +203,14 @@ export class AppComponent implements AfterViewInit, OnInit  {
   public styleErase : Style;
   public addPolygon : Draw;
   public erasePolygon : Draw;
+  public addpixelpoly : Draw;
+  public lastAtlasSize = 0;
   public headerTest: String = "Home";
   public selectedValue: string = 'nissl';
   public selectedCar: string;
   public individualRegion;
+  public polygon;
+  public progress = 0;
 
   tracers: Tracer[] = [
     {value: 'fluro', viewValue: 'Fluro'},
@@ -233,11 +245,12 @@ export class AppComponent implements AfterViewInit, OnInit  {
     if (!firebase.apps.length) {
         firebase.initializeApp(this.firebaseConfig);
     }
-    this.progress=0;
+
     this.defaultGeoJSONSecNo = 60;
     this.secNo = 60;
     this.brainID = 4958
     this.PMDID = 'PMD2495';
+    this.brainIdPm = 2495;
 
     this.sources = {
       osm: new SourceOsm(),
@@ -341,6 +354,12 @@ export class AppComponent implements AfterViewInit, OnInit  {
       style:this.styleErase,
     });
 
+    this.addpixelpoly = new Draw({
+      source: this.vector.getSource(),
+      type: "Polygon",
+      style:this.styleAdd,
+      name:"addRegion",
+    });
 
     this.defaultURL = 'http://braincircuits.org/cgi-bin/iipsrv.fcgi?FIF=/PMD2495/PMD2495%262494-F20-2016.02.26-23.11.41_PMD2495_3_0060.jp2&GAM=1&MINMAX=1:0,255&MINMAX=2:0,255&MINMAX=3:0,255&JTL={z},{tileIndex}';
 
@@ -399,23 +418,37 @@ export class AppComponent implements AfterViewInit, OnInit  {
       this.setPolyStyle();
     });
 
-    /*this.addPolygon.on("drawstart",(event)=>{
-      this.setPolyStyle();
-    });
-    this.addPolygon.on("drawend",(event)=>{
-      this.setPolyStyle();
-
-    });*/
-
   }
 
   setPolyStyle(){
         var vector_sr = this.vector.getSource();
         var features = vector_sr.getFeatures();
-
-        var bugFeature = new Feature;
+        var bugFeature= new Feature;
+        
+        console.log(features,"features");
         if(parseInt(features[features.length-1].ol_uid)> this.lastol_uid == true)
-        { 
+        {   //console.log(features,this.addpixelpoly.getActive(),"yuy")
+            if(false && this.addpixelpoly.getActive()){
+              console.log(this.addpixelpoly.getActive());
+              var vectorM_sr = this.modifyVector.getSource();
+               var featuresM = vectorM_sr.getFeatures();
+               var format = new GeoJSON();
+                var turfpoly;
+                var last = turf.polygon([]);
+                if(this.treeRegion!=0){
+                  var featureSelected = this.modifyVector.getSource().getFeatureById(this.treeRegion);
+                  var feature = features[features.length-1];
+                  console.log(feature,"last");
+                  feature = format.writeFeatureObject(feature);
+                  turfpoly = format.writeFeatureObject(featureSelected);
+                  turfpoly = turf.multiPolygon(turf.cleanCoords(turfpoly).geometry.coordinates); 
+                  console.log(feature,turfpoly.geometry.coordinates,turf.buffer(turfpoly,0));
+                  turfpoly = turf.union(turfpoly,feature);
+                  console.log("union",turfpoly);  
+                  
+                }
+
+            }
             if(this.erasePolygon.getActive() == true && features[features.length - 1].getStyle() == null ){ //check if style is already set
                   features[features.length -1].setStyle(this.styleErase);
                   features[features.length -1].set("name","erase");
@@ -478,11 +511,11 @@ export class AppComponent implements AfterViewInit, OnInit  {
     });
   }
 
-  savePolygonsToFirebase = () => {
+  savePolygonsToDatabase = () => {
     //const coordinates = this.map.getLayers().item(1).getSource().getFeatures()[0].values_.geometry.flatCoordinates;
     //const type = this.map.getLayers().item(1).getSource().getFeatures()[0].getGeometry().getType();
     var writer = new GeoJSON();
-    var geojsonStr = writer.writeFeatures(this.vector.getSource().getFeatures());
+    
     /*const data = {
       'string': "geojsonStr",
       "geometry": {
@@ -490,16 +523,91 @@ export class AppComponent implements AfterViewInit, OnInit  {
         "coordinates": coordinates,
       },
     };*/
-
-    var outObj_atlas = { 
-      imagename: this.brainID,
-      series_id: "" + this.PMDID,
+    var outObj_atlas; 
+    console.log(this.category);
+    if(this.category=="Injection"&&this.lastol_uid!=0){
+    
+    this.combine();  
+    var feature = this.featureStack[0];
+    feature.setId(255);
+    console.log(feature,this.featureStack);
+    var geojsonStr = writer.writeFeatures([feature]);
+       outObj_atlas = { 
+        imagename: this.brainIdPm,
+        series_id: "" + this.brainID,
+        section_id: ""+ this.secNo,
+        section: "" + this.secNo,
+        category: "injreg",
+        tracername:"R",
+        injection: undefined
+      };
+      outObj_atlas.injection = geojsonStr;
+      //http://3.235.171.52/webtools/webtools/seriesbrowser/deleteatlas_status_wp/?brain_id=2495&section=90
+      var apifunName = 'saveinjection_status_wp/';
+      console.log("save works", geojsonStr, outObj_atlas);
+      console.log("series",this.PMDID.slice(3,8),this.brainID,this.secNo,outObj_atlas);
+    }
+    else if(this.category=="Atlas"){
+       outObj_atlas = { 
+      imagename: parseInt(this.PMDID.slice(3,8)),
+      series_id: "" + this.brainID,
       section_id: ""+ this.secNo,
       section: "" + this.secNo,
+      category: "atlas",
+      atlas: undefined
     };
-    //outObj_atlas.atlas = JSON.stringify(app.atlas);
-    var apifunName = '/saveatlas_status_wp/';
+    var feature = this.modifyVector.getSource().getFeatures();
+    var geojsonStr = writer.writeFeatures(feature);
+    outObj_atlas.atlas = JSON.stringify(geojsonStr);//JSON.stringify(geojsonStr);
+    console.log(feature,"features");
+    //http://3.235.171.52/webtools/webtools/seriesbrowser/deleteatlas_status_wp/?brain_id=2495&section=90
+    var apifunName = 'saveatlas_status_wp/';
     console.log("save works", geojsonStr, outObj_atlas);
+    console.log("series",this.PMDID.slice(3,8),this.brainID,this.secNo);
+    }
+    var saveurl = "http://3.235.171.52/webtools/webtools/seriesbrowser/";
+    $.ajax({
+			url: saveurl+apifunName,
+			dataType: 'json',
+      async: false,
+      data: {'msg':JSON.stringify(outObj_atlas)},
+      method : "POST",
+			success: function(response) {
+          try{
+            //response = JSON.parse(response);
+            if(response.status == 0){
+              // resp = response.data;
+              // dmsg = "Saved action : " + resp.state;
+              var dmsg = "Success saving atlas";
+              console.log(dmsg,response);
+              //displayMessage(dmsg,true);
+              //closeMessage(true);
+              //app.atlas_loaded = false;
+              //refreshOL();
+            }
+            else{
+              //failMessage('Saving failed : ' + response.error);
+              console.log("error in saving",response.error);
+    
+              return;
+            }
+          }
+          catch(exc){
+            //failMessage('Exception : ' + exc.message);
+            console.log('Exception in save : ' + exc.message);
+            console.log(dmsg,response);
+            return;
+          }
+      },
+			fail: function(xhr,status,error){
+				//failMessage('Saving failed : ' + error);
+			}
+    });
+
+
+
+
+
     /*$(function () {
       // 6 create an instance when the DOM is ready
       function nodeExpand(node){
@@ -557,12 +665,13 @@ export class AppComponent implements AfterViewInit, OnInit  {
           }});
       })
     });*/
-    const db = firebase.database().ref().child("vector").push(geojsonStr);
+    //const db = firebase.database().ref().child("vector").push(geojsonStr);
   }
 
-  retrievePolygonsFromFirebase = () => {
+  retrievePolygonsFromDatabase = () => {
     console.log("works here");
-    firebase.database().ref('vector').once('value', snapshot => {
+    var reader = new GeoJSON();
+    /*firebase.database().ref('vector').once('value', snapshot => {
       var items = [];
       snapshot.forEach((child) => {
         items.push(child.val());
@@ -570,7 +679,38 @@ export class AppComponent implements AfterViewInit, OnInit  {
       this.loadedFeature = items[items.length - 1];
     }).then( () => {
       this.loadPolygonsFromFirebase()
+    });*/
+    var flag = 0;
+    var saveurl = "http://3.235.171.52/webtools/webtools/seriesbrowser/";
+    var source = this.vector.getSource();
+    if(this.category=="Injection"){
+      saveurl  = saveurl + 'getinjectionregion_status_wp/PMD'+ this.brainIdPm + '/' +this.secNo + '/' + "R/"
+      flag = 1
+    }
+
+    $.getJSON(saveurl,function(jsonresponse){
+      console.log(jsonresponse);
+      try{
+        console.log(this.category);
+        if(flag){
+          var features=jsonresponse.data.features[0];
+          console.log(features,jsonresponse);
+          features = reader.readFeatures(features);
+          console.log(features);
+          features[0].setStyle(this.styleAdd);
+          source.addFeature(features[0]);
+          console.log(source.getFeatures());
+          this.featureStack =[features[0]];
+          this.vector.setSource(source);
+          
+        }
+      }
+      catch(exec){
+        console.log("Error in Loading Injection region data ",exec.stack);
+      }
     });
+    
+
   }
 
   loadPolygonsFromFirebase = () => {
@@ -619,12 +759,10 @@ export class AppComponent implements AfterViewInit, OnInit  {
   };
 
   onClick(event) {
-    // var a=document.getElementById("showat").onclick;
-    // var b=document.getElementById("hideat").onclick;
     this.modifyVector.getSource().clear();
-      if (event=='show') {
-      //this.lastChecked = true;
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/' + this.PMDID + '/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
+    if (event=='show') {
+      this.lastChecked = true;
+      this.httpClient.get('http://3.235.171.52/webtools/webtools/seriesbrowser/getatlasgeojson_status_wp/' + this.PMDID + '/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
         var atlasstyle = new Style({
           fill: new Fill({
               color: 'rgba(255, 255, 255, 0)'
@@ -645,20 +783,26 @@ export class AppComponent implements AfterViewInit, OnInit  {
               })
         });
         console.log(this.defaultGeoJSONSecNo);
-        res = JSON.stringify(res);
+        console.log("res",res);
+        //console.log(JSON.parse(res["data"]))
+        res = res["data"];
         var reader = new GeoJSON();
+        var data = res;
         const newGeoJson = reader.readFeatures(res);
         var i;
+        console.log("new",newGeoJson)
         for (i = 0; i < newGeoJson.length; i++) {
           newGeoJson[i].setStyle(atlasstyle);
           this.modifyVector.getSource().addFeature(newGeoJson[i]);
+          this.lastAtlasSize+=this.lastAtlasSize;
         }
       });
       this.modifyVector.setVisible(true);
+      
     }
     else {
-      //this.lastChecked = false;
-     this.modifyVector.setVisible(false);
+      this.lastChecked = false;
+      this.modifyVector.setVisible(false);
     }
   }
 
@@ -692,8 +836,8 @@ export class AppComponent implements AfterViewInit, OnInit  {
           color: 'rgba(255, 255, 255, 0.4)'
       }),
       stroke: new Stroke({
-          color: 'white', //'#2F7B63',
-          width: 0.5
+          color: '#2F7B63', //'#2F7B63',
+          width: 3
         }),
           text: new Text({
               font: '12px Calibri,sans-serif',
@@ -719,6 +863,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.draw.setActive(false);
     this.erasePolygon.setActive(false);
     this.addPolygon.setActive(true);
+    this.addpixelpoly.setActive(false);
     this.map.addInteraction(this.addPolygon);
     
   }
@@ -727,7 +872,16 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.draw.setActive(false);
     this.addPolygon.setActive(false);
     this.erasePolygon.setActive(true);
+    this.addpixelpoly.setActive(false);
     this.map.addInteraction(this.erasePolygon);  
+  }
+
+  addpixelpolyfun(){
+    this.draw.setActive(false);
+    this.addPolygon.setActive(false);
+    this.erasePolygon.setActive(false);
+    this.addpixelpoly.setActive(true);
+    this.map.addInteraction(this.addpixelpoly);  
   }
 
   combine(){
@@ -755,9 +909,13 @@ export class AppComponent implements AfterViewInit, OnInit  {
         if(count>0){
             if(features[i].get('name')=="add"){
               var uid = features[i].ol_uid;
+              console.log(uid,"uid");
+              console.log(vector_sr.getFeatures(),"feas",polygon);
               vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
+              
               //console.log(isIntersected," check");
               polygon = turf.union(polygon,turfpoly);
+              console.log(polygon,"p");
             }
             else if(count>0 && features[i].get('name')=="erase"){
               var uid = features[i].ol_uid;
@@ -787,6 +945,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
           var uid = features[i].ol_uid;
           vector_sr.removeFeature(vector_sr.getFeatureByUid(uid));
           polygon = format.writeFeatureObject(features[i]);
+          console.log(polygon,"p");
           count = count+1;
         }
     }
@@ -796,6 +955,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
         this.lastol_uid = parseInt(polygon.ol_uid);
         this.last_size = 1;
         this.featureStack = [polygon];
+        console.log(this.featureStack);
         vector_sr.addFeature(polygon);
     }
     //console.log(vector_sr.getFeatures());
@@ -807,12 +967,18 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.draw.setActive(true);
     this.addPolygon.setActive(false);
     this.erasePolygon.setActive(false);
+    this.addpixelpoly.setActive(false);
     this.draw = new Draw({
       source: this.vector.getSource(),
       type: interactionType,
       freehand: true,
     });
+    if(interactionType == "Polygon"){
+      this.draw = this.draw;
+      this.draw.set("name","addpixel")
+    }
     this.map.addInteraction(this.draw);
+    
   }
 
   
@@ -821,6 +987,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
     this.addPolygon.setActive(false);
     this.erasePolygon.setActive(false);
     this.map.removeInteraction(this.draw);
+    this.addpixelpoly.setActive(false);
   }
 
   deleteDrawing() {
@@ -847,7 +1014,8 @@ export class AppComponent implements AfterViewInit, OnInit  {
   }
 
   getBrainIDUpdated(event) {
-    this.brainID = parseInt(event.target.value);    
+    this.brainID = parseInt(event.target.value);  
+    this.brainIdPm = parseInt(event.target.value);  
     console.log("brainid", this.brainID);
   }
 
@@ -860,8 +1028,14 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
   brainIDUpdated() {
     this.progress=10;
+
     this.modifyVector.setVisible(false);
     console.log(this.brainID, this.secNo);
+    var series_id = 0;
+    this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getseriesid_status_wp/' + this.brainIdPm + '/').subscribe(res=>{
+      console.log(res);
+      this.brainID = res["data"]["F"];
+    });
     this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/' + this.brainID + '/').subscribe(res=>{
       this.urlData = res;
       console.log("here", res);
@@ -875,7 +1049,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
       });
       this.defaultURL = newURL;
       this.imagery.setSource(this.zoomifySource);
-      this.progress=50;
+      this.progress=100;
       console.log(this.defaultURL);
       if (this.selectedValue == 'nissl') {
         var event = {
@@ -888,12 +1062,16 @@ export class AppComponent implements AfterViewInit, OnInit  {
           checked: false,
         };
         this.onToggleTracer(event);
+
       }
-      this.progress=100;
+      
     });
-    console.log(this.lastChecked, this.defaultGeoJSONSecNo); 
+    this.progress=100;
+    console.log(this.lastChecked, this.defaultGeoJSONSecNo);
     if (this.lastChecked == true) {
-      this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/' + this.PMDID + '/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
+      var newUrl = "http://3.235.171.52//webtools/webtools/seriesbrowser/getatlasgeojson_status_wp/";
+      //'http://mitradevel.cshl.org/webtools/seriesbrowser/getatlasgeojson/'
+      this.httpClient.get(newUrl+ this.PMDID + '/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
         var atlasstyle = new Style({
           fill: new Fill({
               color: 'rgba(255, 255, 255, 0)'
@@ -913,23 +1091,28 @@ export class AppComponent implements AfterViewInit, OnInit  {
                   })
               })
         });
-        
         console.log("check geojson", this.defaultGeoJSONSecNo, res);
         res = JSON.stringify(res);
         var reader = new GeoJSON();
         const newGeoJson = reader.readFeatures(res);
         this.modifyVector.getSource().clear();
         var i;
+        this.lastAtlasSize = 0;
         for (i = 0; i < newGeoJson.length; i++) {
           newGeoJson[i].setStyle(atlasstyle);
           this.modifyVector.getSource().addFeature(newGeoJson[i]);
+          this.lastAtlasSize+=1;
         }
       });
-      this.progress=100;
       this.modifyVector.setVisible(true);
     }
-    if(this.progress==100)
+    console.log("progres",this.progress);
+    if(this.progress==100){
     this.progress=0;
+      console.log("reached 100");
+
+    }
+
   }
 
 
@@ -938,7 +1121,6 @@ export class AppComponent implements AfterViewInit, OnInit  {
       this.httpClient.get('http://mitradevel.cshl.org/webtools/seriesbrowser/getthumbnails/' + this.brainID + '/').subscribe(res=>{
         this.urlData = res;
         console.log(res);
-
         var toggleSecNo;
         if (this.secNo - 4 < 0) {
           toggleSecNo = 0;
@@ -985,17 +1167,17 @@ export class AppComponent implements AfterViewInit, OnInit  {
         checked: true,
       };
       this.lastChecked = true;
-     // this.onToggle(event);
+      this.onClick(event);
     };
     if (this.myControl.value == "turnOffGEOJson") {
       this.lastChecked = false;
       this.modifyVector.setVisible(false);
     };
     if (this.myControl.value == "savePolygons") {
-      this.savePolygonsToFirebase();
+      this.savePolygonsToDatabase();
     };
     if (this.myControl.value == "retrievePolygons") {
-      this.retrievePolygonsFromFirebase();
+      this.retrievePolygonsFromDatabase();
     };
     if (this.myControl.value == "loadPolygons") {
       this.loadPolygonsFromFirebase();
