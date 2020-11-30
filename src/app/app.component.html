@@ -323,7 +323,48 @@
 
                   
                 </mat-accordion>
+                <mat-expansion-panel (opened)="panelOpenState = true; this.changeHeaderTest('Development Tool | Colour Control');"
+                                (closed)="panelOpenState = false; this.changeHeaderTest('Development Tool');">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        Colour Colour
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+                      Red
+                      <mat-slider
+                      thumbLabel
+                      (change)="this.redChange($event)"
+                      min="0"
+                      max="4096"></mat-slider><p> </p>
+                      Green
+                      <mat-slider
+                      thumbLabel
+                      (change)="this.onGreenChange($event)"
+                      min="0"
+                      max="4096"></mat-slider><p> </p>
+                      Blue
+                      <mat-slider
+                      thumbLabel
+                      (change)="this.onBlueChange($event)"
+                      min="0"
+                      max="4096"></mat-slider><p> </p>
+                      Gamma
+                      <mat-slider
+                      thumbLabel
+                      (change)="this.ongammaChange($event)"
+                      min="0.1"
+                      step="0.1"
+                      max="2"></mat-slider><p> </p>
+                      Opacity
+                      <mat-slider
+                      thumbLabel
+                      (change)="this.onopacityChange($event)"
+                      min="0.1"
+                      step="0.1"
+                      max="1"></mat-slider><p> </p>
+                  </mat-expansion-panel><p> </p>
               </mat-expansion-panel><p> </p>
+              
 
 
               

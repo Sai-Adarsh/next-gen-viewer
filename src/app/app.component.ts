@@ -425,10 +425,10 @@ export class AppComponent implements AfterViewInit, OnInit  {
         var features = vector_sr.getFeatures();
         var bugFeature= new Feature;
         
-        console.log(features,"features");
+        console.log(features,"features",this.addpixelpoly.getActive());
         if(parseInt(features[features.length-1].ol_uid)> this.lastol_uid == true)
-        {   //console.log(features,this.addpixelpoly.getActive(),"yuy")
-            if(false && this.addpixelpoly.getActive()){
+        {   console.log(features,"yuy",this.addpixelpoly)
+            if(this.addpixelpoly.getActive()){
               console.log(this.addpixelpoly.getActive());
               var vectorM_sr = this.modifyVector.getSource();
                var featuresM = vectorM_sr.getFeatures();
@@ -760,6 +760,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
 
   onClick(event) {
     this.modifyVector.getSource().clear();
+    this.progress = 10;
     if (event=='show') {
       this.lastChecked = true;
       this.httpClient.get('http://3.235.171.52/webtools/webtools/seriesbrowser/getatlasgeojson_status_wp/' + this.PMDID + '/00' + this.defaultGeoJSONSecNo + '/').subscribe(res=>{
@@ -782,6 +783,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
                   })
               })
         });
+        this.progress = 50;
         console.log(this.defaultGeoJSONSecNo);
         console.log("res",res);
         //console.log(JSON.parse(res["data"]))
@@ -796,11 +798,16 @@ export class AppComponent implements AfterViewInit, OnInit  {
           this.modifyVector.getSource().addFeature(newGeoJson[i]);
           this.lastAtlasSize+=this.lastAtlasSize;
         }
+        this.progress = 80;
+        setTimeout(()=>{
+          this.endprogress();
+        }, 2000);
       });
       this.modifyVector.setVisible(true);
       
     }
     else {
+      this.progress = 0;
       this.lastChecked = false;
       this.modifyVector.setVisible(false);
     }
@@ -1026,9 +1033,12 @@ export class AppComponent implements AfterViewInit, OnInit  {
     console.log("section", this.secNo);
   }
 
+  endprogress(){
+    this.progress=0;
+  }
+
   brainIDUpdated() {
     this.progress=10;
-
     this.modifyVector.setVisible(false);
     console.log(this.brainID, this.secNo);
     var series_id = 0;
@@ -1049,7 +1059,7 @@ export class AppComponent implements AfterViewInit, OnInit  {
       });
       this.defaultURL = newURL;
       this.imagery.setSource(this.zoomifySource);
-      this.progress=100;
+      this.progress=50;
       console.log(this.defaultURL);
       if (this.selectedValue == 'nissl') {
         var event = {
@@ -1064,6 +1074,10 @@ export class AppComponent implements AfterViewInit, OnInit  {
         this.onToggleTracer(event);
 
       }
+      this.progress = 100;
+      setTimeout(()=>{
+        this.endprogress();
+      }, 2000);
       
     });
     this.progress=100;
